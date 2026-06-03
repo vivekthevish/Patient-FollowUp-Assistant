@@ -1,0 +1,41 @@
+followup_id,patient_id,followup_date,contact_method,outcome,reminder_sent,escalated,notes,next_action,completed_by
+FU001,P001,2026-05-01,Phone Call,reached,yes,no,Patient reported mild chest discomfort. Advised to monitor and visit ER if worsens.,Schedule cardiology review,Dr. Amit Sharma
+FU002,P001,2026-05-15,In-person Visit,completed,yes,no,BP 130/80. ECG reviewed. Medications continued. Next appointment in 2 weeks.,Continue medications,Nurse Asha
+FU003,P002,2026-05-10,SMS Reminder,no response,yes,no,No response to SMS. Phone follow-up attempted.,Phone follow-up needed,Care Coordinator Meena
+FU004,P002,2026-05-20,In-person Visit,completed,yes,no,HbA1c 8.2%. Diet counselling done. Insulin adjusted.,Monitor glucose daily,Dr. Sunita Rao
+FU005,P003,2026-05-01,In-person Visit,completed,yes,yes,Significant fluid retention. BNP 1800 pg/mL. Hospitalization considered.,Urgent review scheduled,Dr. Rajan Mehta
+FU006,P003,2026-05-10,Phone Call,reached,yes,yes,Patient very breathless. Advised immediate ER visit. Family contacted.,Emergency escalation,Nurse Priya
+FU007,P004,2026-05-10,SMS Reminder,acknowledged,yes,no,Patient confirmed wound healing well. No fever. Taking antibiotics as prescribed.,Continue antibiotic course,Care Coordinator Ravi
+FU008,P004,2026-05-20,In-person Visit,completed,yes,no,Wound fully healed. Antibiotics completed. Cleared for normal activity.,Routine follow-up at 6 weeks,Dr. Pooja Verma
+FU009,P005,2026-05-12,Phone Call,reached,yes,no,Patient using inhalers correctly. Some dyspnea on exertion. O2 sat 94%.,Pulmonology review needed,Dr. Vivek Kapoor
+FU010,P005,2026-05-20,In-person Visit,completed,yes,no,Spirometry done. Steroid dose tapered. Pulmonary rehab referral given.,Start rehab program,Dr. Vivek Kapoor
+FU011,P006,2026-05-15,Email,acknowledged,yes,no,Patient acknowledged email reminder. Blood pressure log reviewed online.,Continue medication,Care Coordinator Sita
+FU012,P006,2026-05-25,In-person Visit,completed,yes,no,BP 145/92. Amlodipine increased to 10mg. Dietary salt restriction advised.,24hr BP monitoring,Dr. Anjali Gupta
+FU013,P007,2026-05-05,Phone Call,reached,yes,no,Patient reports pain controlled. Using walker for ambulation. PT attending.,Continue physiotherapy,Nurse Kavitha
+FU014,P007,2026-05-15,In-person Visit,completed,yes,no,Wound healed. DVT prophylaxis completed. ROM improving. Gait assessment done.,Continue PT for 4 more weeks,Dr. Rajeev Pillai
+FU015,P008,2026-05-15,Phone Call,reached,yes,yes,Severe fatigue and fever 38.5°C reported. CBC showed ANC 500. Growth factor started.,Urgent oncology review,Dr. Shobha Krishnan
+FU016,P008,2026-05-22,In-person Visit,completed,yes,yes,ANC improved to 1500. Nausea managed. Next chemo cycle delayed by one week.,CBC recheck in 1 week,Dr. Shobha Krishnan
+FU017,P009,2026-05-17,SMS Reminder,acknowledged,yes,no,Patient confirmed following low-fat diet. No pain recurrence.,Continue diet modification,Care Coordinator Mohan
+FU018,P009,2026-05-24,In-person Visit,completed,yes,no,Amylase normal. Lipase normal. Advised graduated return to normal diet.,CT scan at 4 weeks,Dr. Deepak Agarwal
+FU019,P010,2026-04-28,In-person Visit,completed,yes,yes,Aphasia improving. Right-sided weakness persists. Needs intensive PT/OT.,Continue rehabilitation,Dr. Pradeep Nambiar
+FU020,P010,2026-05-10,In-person Visit,completed,yes,yes,MRI shows improving infarct. Antithrombotic therapy continued. Carotid Doppler ordered.,Schedule carotid Doppler,Dr. Pradeep Nambiar
+FU021,P011,2026-05-20,Phone Call,reached,yes,no,Patient reports no pain. Urine output normal. Dietary modifications followed.,Confirm stone clearance imaging,Dr. Rohit Saxena
+FU022,P011,2026-05-26,In-person Visit,completed,yes,no,KUB X-ray: no residual stones. Metabolic workup ordered for prevention.,24hr urine collection,Dr. Rohit Saxena
+FU023,P012,2026-05-16,SMS Reminder,acknowledged,yes,no,New mother acknowledged. Breastfeeding well. Blood glucose spot check 98 mg/dL.,Continue glucose monitoring,Care Coordinator Radha
+FU024,P012,2026-05-23,In-person Visit,completed,yes,no,Fasting glucose 105 mg/dL. Weight returning to normal. Metformin dose reviewed.,OGTT at 6 weeks postpartum,Dr. Sunita Rao
+FU025,P013,2026-05-11,Phone Call,reached,yes,no,Caregiver reports more frequent falls. Medication compliance 80%. Dose adjustment needed.,Neurology urgent review,Dr. Sunita Rao
+FU026,P013,2026-05-18,In-person Visit,completed,yes,no,Tremors moderate. UPDRS score 32. Levodopa increased. Fall prevention measures discussed.,OT assessment for home safety,Dr. Sunita Rao
+FU027,P014,2026-05-08,Phone Call,reached,yes,yes,Swelling in legs worsening. Urine output decreased. Advised increase fluid monitoring.,Urgent nephrology review,Dr. Rohit Saxena
+FU028,P014,2026-05-15,In-person Visit,completed,yes,yes,eGFR 38. Proteinuria high. Referred to transplant team. Dialysis planning initiated.,AV fistula consultation,Dr. Rohit Saxena
+FU029,P015,2026-05-05,Phone Call,reached,yes,no,Sternal wound pain manageable. No fever. Cardiac rehab attendance confirmed.,Continue rehab,Nurse Deepa
+FU030,P015,2026-05-12,In-person Visit,completed,yes,no,Echo EF 55%. Incision healing well. Cardiac rehab week 2 completed. Medications reviewed.,Stress test at 8 weeks,Dr. Rajan Mehta
+FU031,P016,2026-05-21,Email,acknowledged,yes,no,Patient reports fatigue and palpitations. TSH check ordered.,TSH blood test urgently,Care Coordinator Lakshmi
+FU032,P016,2026-05-28,In-person Visit,completed,yes,no,TSH 4.2. Levothyroxine dose increased. ECG normal. BP controlled.,TSH recheck in 6 weeks,Dr. Anjali Gupta
+FU033,P017,2026-05-13,Phone Call,reached,yes,yes,Patient reports increased abdominal distension. Weight up 3kg in 5 days.,Urgent hepatology review,Dr. Deepak Agarwal
+FU034,P017,2026-05-20,In-person Visit,completed,yes,yes,Ascites tapped 2L. Serum albumin 2.8 g/dL. Varices surveillance booked.,Endoscopy next week,Dr. Deepak Agarwal
+FU035,P018,2026-05-20,Phone Call,reached,yes,no,Joint pain improving partially. MTX tolerated. Methotrexate monitoring bloods needed.,LFT and CBC check,Dr. Pooja Verma
+FU036,P018,2026-05-27,In-person Visit,completed,yes,no,DAS28 4.2. LFT normal. Biologics eligibility being assessed. Steroid taper started.,Biologics referral,Dr. Pooja Verma
+FU037,P019,2026-05-15,Phone Call,reached,yes,no,Mild rectal bleeding. Radiation proctitis suspected. Dietary advice given.,GI review if persists,Dr. Shobha Krishnan
+FU038,P019,2026-05-22,In-person Visit,completed,yes,no,PSA 0.8. Proctitis improving. Hormonal therapy continuing. Bone density scan ordered.,DEXA scan next month,Dr. Shobha Krishnan
+FU039,P020,2026-05-21,SMS Reminder,acknowledged,yes,no,Patient confirmed taking medications. Voice quality improving post-surgery.,Routine follow-up,Care Coordinator Anita
+FU040,P020,2026-05-28,In-person Visit,completed,yes,no,TSH 1.8. Calcium levels normal. Parathyroid function intact. Recovery excellent.,Ultrasound at 6 weeks,Dr. Anjali Gupta

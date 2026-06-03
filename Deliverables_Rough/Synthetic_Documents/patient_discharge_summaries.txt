@@ -1,0 +1,199 @@
+CARECONNECT HOSPITAL SYSTEM
+SAMPLE PATIENT DISCHARGE SUMMARIES
+Compiled for AI Training and Follow-Up Protocol Reference
+
+================================================================================
+DISCHARGE SUMMARY — PATIENT P001
+================================================================================
+Patient: Rajesh Kumar | Age: 58 | Gender: Male | MRD: CC-2026-P001
+Admission: 15 April 2026 | Discharge: 22 April 2026
+Admitting Diagnosis: Acute ST-Elevation Myocardial Infarction (STEMI), Anterior Wall
+Discharging Physician: Dr. Amit Sharma, Cardiology
+
+HOSPITAL COURSE:
+Patient admitted with 4-hour history of severe central chest pain, diaphoresis, and nausea.
+ECG confirmed ST-elevation in V1–V4. Troponin-I peaked at 42 ng/mL. Emergency primary PCI
+performed on LAD artery with drug-eluting stent placement. Post-procedure TIMI-3 flow achieved.
+Echo Day 3: EF 45%, anterior wall hypokinesia. Commenced cardiac rehabilitation Day 5.
+
+DISCHARGE MEDICATIONS:
+1. Aspirin 75mg OD (lifelong)
+2. Atorvastatin 40mg nocte (lifelong)
+3. Metoprolol Succinate 25mg OD (minimum 12 months)
+4. Ramipril 5mg OD (minimum 12 months)
+
+FOLLOW-UP INSTRUCTIONS:
+- Return immediately if: chest pain, breathlessness, palpitations, syncope
+- No strenuous activity for 4 weeks
+- Low-sodium diet (<2g/day); Mediterranean diet encouraged
+- Smoking cessation mandatory
+- Cardiology review at 2 weeks: ECG, BP, medication review
+- Echo at 4 weeks: LV function assessment
+- Cardiac rehabilitation: 36 sessions over 12 weeks
+- Driving restriction: 4 weeks
+
+RISK CLASSIFICATION: HIGH
+PRIMARY FOLLOW-UP CONCERN: Anti-platelet compliance, BP control, LV function monitoring
+
+================================================================================
+DISCHARGE SUMMARY — PATIENT P003
+================================================================================
+Patient: Suresh Nair | Age: 72 | Gender: Male | MRD: CC-2026-P003
+Admission: 10 April 2026 | Discharge: 18 April 2026
+Admitting Diagnosis: Decompensated Congestive Heart Failure (NYHA Class III)
+Discharging Physician: Dr. Rajan Mehta, Cardiology
+
+HOSPITAL COURSE:
+Presented with progressive exertional dyspnoea (NYHA III), bilateral pedal oedema,
+and orthopnoea for 5 days. BNP 2200 pg/mL on admission. CXR: cardiomegaly, bilateral
+pleural effusions. Echo: EF 30%, dilated LV, moderate MR. IV Furosemide for 4 days —
+4.5L diuresis. Haemodynamically stable at discharge. BNP reduced to 780 pg/mL.
+
+DISCHARGE MEDICATIONS:
+1. Furosemide 40mg OD
+2. Carvedilol 6.25mg BD (uptitrate as tolerated)
+3. Lisinopril 10mg OD
+4. Spironolactone 25mg OD
+5. Daily weight monitoring chart provided
+
+FOLLOW-UP INSTRUCTIONS:
+- URGENT: Cardiology review in 7–10 days — BNP recheck, electrolytes
+- Daily self-weighing: alert if weight increases >2 kg in 2 days → contact care team immediately
+- Fluid restriction: 1.5L/day; sodium restriction 2g/day
+- Bed rest for 2 weeks; gradual mobilisation
+- Nurse-led heart failure clinic enrolment
+- Echo in 6–8 weeks: assess response to medication optimisation
+
+RISK CLASSIFICATION: CRITICAL
+PRIMARY FOLLOW-UP CONCERN: Fluid overload recurrence, medication compliance, BNP monitoring
+
+================================================================================
+DISCHARGE SUMMARY — PATIENT P008
+================================================================================
+Patient: Lakshmi Iyer | Age: 55 | Gender: Female | MRD: CC-2026-P008
+Admission: 01 May 2026 | Discharge: 07 May 2026
+Admitting Diagnosis: Febrile Neutropenia Post-Cycle 3 Chemotherapy (Breast Cancer)
+Discharging Physician: Dr. Shobha Krishnan, Oncology
+
+HOSPITAL COURSE:
+Presented with fever 38.8°C and rigors 8 days post-Cycle 3 AC chemotherapy. ANC on
+admission 320 cells/μL. Blood cultures grew E. coli — sensitive to Ceftriaxone. IV
+antibiotics for 5 days. G-CSF (Filgrastim) administered. ANC recovered to 1500 by Day 5.
+Clinically well on discharge.
+
+DISCHARGE MEDICATIONS:
+1. Tamoxifen 20mg OD (long-term)
+2. Ondansetron 8mg PRN for nausea
+3. Folic Acid 5mg OD
+4. Oral Ciprofloxacin 500mg BD for 5 days post-discharge
+
+FOLLOW-UP INSTRUCTIONS:
+- CBC mandatory before Cycle 4 chemotherapy (minimum ANC >1500 before proceeding)
+- Temperature monitoring: seek ER immediately if fever >38°C
+- Cycle 4 delayed by 1 week; oncology to confirm new date
+- G-CSF prophylaxis to commence with Cycle 4 (day 2–11)
+- Neutropenic diet: avoid raw vegetables, salads, soft cheeses until ANC >1000
+- Psychological support referral: anxiety around chemotherapy
+
+RISK CLASSIFICATION: CRITICAL
+PRIMARY FOLLOW-UP CONCERN: Neutropenia monitoring, antibiotic completion, cycle timing
+
+================================================================================
+DISCHARGE SUMMARY — PATIENT P010
+================================================================================
+Patient: Anita Bose | Age: 67 | Gender: Female | MRD: CC-2026-P010
+Admission: 12 April 2026 | Discharge: 25 April 2026
+Admitting Diagnosis: Acute Ischaemic Stroke — Left MCA Territory
+Discharging Physician: Dr. Pradeep Nambiar, Neurology
+
+HOSPITAL COURSE:
+Presented with sudden onset aphasia, right hemiparesis, and facial droop. NIHSS 14
+on admission. CT Head: no haemorrhage. IV tPA administered at 3 hours; no haemorrhagic
+transformation. MRI DWI: left MCA territory infarct. Echocardiogram: paroxysmal AF
+(CHADS2-VASc score 5). Anticoagulation with Apixaban initiated on Day 4. Intensive
+physiotherapy, speech therapy, and occupational therapy commenced in-patient.
+
+DISCHARGE MEDICATIONS:
+1. Apixaban 5mg BD (long-term, AF-related stroke)
+2. Atorvastatin 80mg nocte (LDL target <70 mg/dL)
+3. Ramipril 5mg OD (BP target <130/80)
+
+FOLLOW-UP INSTRUCTIONS:
+- Neurology outpatient review in 2 weeks: NIHSS re-scoring
+- Speech therapy: 3x/week (aphasia rehabilitation)
+- Physiotherapy: daily home exercises provided; OPD PT 2x/week
+- Occupational therapy: home assessment for safety modifications
+- Carotid Doppler urgently if not done (to exclude stenosis)
+- Anticoagulation compliance: emphasise stroke recurrence risk
+- Driving: absolute restriction for minimum 3 months; DVLA notification
+- Depression screening at every visit (PHQ-9)
+
+RISK CLASSIFICATION: CRITICAL
+PRIMARY FOLLOW-UP CONCERN: Anticoagulation compliance, rehabilitation progress, recurrence prevention
+
+================================================================================
+DISCHARGE SUMMARY — PATIENT P015
+================================================================================
+Patient: Ramesh Choudhary | Age: 44 | Gender: Male | MRD: CC-2026-P015
+Admission: 18 April 2026 | Discharge: 28 April 2026
+Admitting Diagnosis: Post Elective CABG x 3 (Triple Vessel Disease)
+Discharging Physician: Dr. Rajan Mehta, Cardiothoracic Surgery
+
+HOSPITAL COURSE:
+Elective CABG performed for triple vessel disease (LAD, RCA, LCX involvement). Off-pump
+technique. ICU stay 2 days. Uneventful post-operative course. Echo Day 5: EF 55%.
+Sternal wound clean and healing. Discharged Day 10 post-surgery.
+
+DISCHARGE MEDICATIONS:
+1. Aspirin 100mg OD (lifelong)
+2. Bisoprolol 5mg OD (minimum 12 months)
+3. Atorvastatin 80mg nocte (LDL target <55 mg/dL)
+4. Pantoprazole 40mg OD (gastric protection)
+5. Paracetamol 500mg 6-hourly PRN for pain
+
+FOLLOW-UP INSTRUCTIONS:
+- Sternal wound care: dry dressing daily; no immersion in water for 6 weeks
+- Activity restriction: no lifting >5 kg for 6 weeks; no driving for 6 weeks
+- Cardiac rehabilitation: start at 4–6 weeks post-surgery
+- Cardiology review at 2 weeks: sternal wound, BP, medications
+- Exercise stress test at 8 weeks
+- Lipid panel at 6 weeks: target LDL <55 mg/dL
+
+RISK CLASSIFICATION: CRITICAL
+PRIMARY FOLLOW-UP CONCERN: Sternal wound healing, antiplatelet compliance, cardiac rehabilitation
+
+================================================================================
+DISCHARGE SUMMARY — PATIENT P014
+================================================================================
+Patient: Sushma Rao | Age: 59 | Gender: Female | MRD: CC-2026-P014
+Admission: 30 April 2026 | Discharge: 08 May 2026
+Admitting Diagnosis: Diabetic Nephropathy Stage 3B, Acute-on-Chronic Kidney Disease
+Discharging Physician: Dr. Rohit Saxena, Nephrology
+
+HOSPITAL COURSE:
+Presented with worsening lower limb oedema, reduced urine output, and fatigue.
+Creatinine 3.2 mg/dL (baseline 2.1). eGFR 28 mL/min. 24-hour urine protein 1.8g.
+Fluid overload managed with IV Furosemide. ACE inhibitor held temporarily due to AKI;
+restarted ARB (Telmisartan) on Day 5 when creatinine stabilised at 2.4 mg/dL.
+Erythropoietin commenced for anaemia (Hb 9.2 g/dL).
+
+DISCHARGE MEDICATIONS:
+1. Telmisartan 40mg OD
+2. Erythropoietin 4000U SC twice weekly
+3. Calcium carbonate 500mg TDS
+4. Sevelamer 800mg TDS with meals (phosphate binder)
+5. Calcitriol 0.25mcg OD
+
+FOLLOW-UP INSTRUCTIONS:
+- URGENT Nephrology review in 1 week: creatinine, eGFR, potassium
+- Fluid restriction 1.5L/day; low potassium and phosphate diet
+- AV fistula creation consultation: referral sent to vascular surgery
+- Dialysis education: explain haemodialysis and peritoneal dialysis options
+- Renal transplant registry: counselling initiated
+
+RISK CLASSIFICATION: CRITICAL
+PRIMARY FOLLOW-UP CONCERN: AKI recovery monitoring, dialysis preparation, anaemia management
+
+================================================================================
+END OF DISCHARGE SUMMARIES DOCUMENT
+================================================================================

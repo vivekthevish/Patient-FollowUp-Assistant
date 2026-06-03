@@ -1,0 +1,41 @@
+appointment_id,patient_id,appointment_date,appointment_type,status,physician,department,notes
+APT001,P001,2026-05-15,Post-discharge Review,completed,Dr. Amit Sharma,Cardiology,ECG normal. BP controlled at 130/80. Advised low sodium diet.
+APT002,P001,2026-06-01,Follow-up Cardiology,scheduled,Dr. Amit Sharma,Cardiology,Stress test and lipid panel ordered
+APT003,P002,2026-05-20,Diabetes Management,completed,Dr. Sunita Rao,Endocrinology,HbA1c 8.2%. Insulin dose adjusted. Neuropathy symptoms stable.
+APT004,P002,2026-06-10,Diabetes Follow-up,scheduled,Dr. Sunita Rao,Endocrinology,HbA1c recheck and foot examination
+APT005,P003,2026-05-01,Cardiac Review,completed,Dr. Rajan Mehta,Cardiology,BNP elevated. Echo showed EF 35%. Diuretics increased.
+APT006,P003,2026-05-28,Heart Failure Clinic,scheduled,Dr. Rajan Mehta,Cardiology,Weight monitoring and fluid balance assessment
+APT007,P004,2026-05-20,Post-surgery Review,completed,Dr. Pooja Verma,Surgery,Wound healed. No signs of infection. Antibiotics completed.
+APT008,P004,2026-06-15,Routine Check,scheduled,Dr. Pooja Verma,Surgery,Final clearance appointment
+APT009,P005,2026-05-20,Pulmonology Review,completed,Dr. Vivek Kapoor,Pulmonology,Spirometry shows FEV1 52%. Exacerbation managed. Steroids tapered.
+APT010,P005,2026-06-02,COPD Follow-up,scheduled,Dr. Vivek Kapoor,Pulmonology,Pulmonary rehab assessment
+APT011,P006,2026-05-25,BP Review,completed,Dr. Anjali Gupta,Internal Medicine,BP 145/92. Medications adjusted. Lifestyle counselling given.
+APT012,P006,2026-06-08,Hypertension Follow-up,scheduled,Dr. Anjali Gupta,Internal Medicine,24hr BP monitoring review
+APT013,P007,2026-05-15,Orthopedic Review,completed,Dr. Rajeev Pillai,Orthopedics,Wound healing satisfactory. DVT prophylaxis completed. PT initiated.
+APT014,P007,2026-06-01,Hip Recovery Review,scheduled,Dr. Rajeev Pillai,Orthopedics,Gait assessment and physiotherapy review
+APT015,P008,2026-05-22,Oncology Review,completed,Dr. Shobha Krishnan,Oncology,CBC shows neutropenia. Growth factor therapy started. Nausea controlled.
+APT016,P008,2026-05-30,Oncology Follow-up,scheduled,Dr. Shobha Krishnan,Oncology,CBC recheck before next cycle
+APT017,P009,2026-05-24,GI Review,completed,Dr. Deepak Agarwal,Gastroenterology,Amylase normalized. Diet advanced to soft foods. No complications.
+APT018,P009,2026-06-20,Pancreatic Follow-up,scheduled,Dr. Deepak Agarwal,Gastroenterology,CT scan for structural evaluation
+APT019,P010,2026-05-10,Neurology Review,completed,Dr. Pradeep Nambiar,Neurology,MRI shows resolving infarct. Aphasia improving with speech therapy.
+APT020,P010,2026-05-28,Stroke Follow-up,scheduled,Dr. Pradeep Nambiar,Neurology,NIHSS scoring and rehabilitation review
+APT021,P011,2026-05-26,Urology Review,completed,Dr. Rohit Saxena,Urology,Stone fragments cleared. Urine culture negative. Discharged.
+APT022,P011,2026-06-25,Metabolic Stone Workup,scheduled,Dr. Rohit Saxena,Urology,24hr urine oxalate and citrate levels
+APT023,P012,2026-05-23,Endocrinology Review,completed,Dr. Sunita Rao,Endocrinology,Fasting glucose 105 mg/dL. Metformin dose maintained. Dietary guidance given.
+APT024,P012,2026-06-05,Gestational DM Follow-up,scheduled,Dr. Sunita Rao,Endocrinology,OGTT to screen for Type 2 DM
+APT025,P013,2026-05-18,Neurology Review,completed,Dr. Sunita Rao,Neurology,Tremors moderate. Dose titration needed. Fall risk assessment done.
+APT026,P013,2026-06-01,Parkinson's Follow-up,scheduled,Dr. Sunita Rao,Neurology,DaTscan results review and medication optimization
+APT027,P014,2026-05-15,Nephrology Review,completed,Dr. Rohit Saxena,Nephrology,eGFR 38 mL/min. Proteinuria 1.2g/day. Dialysis evaluation initiated.
+APT028,P014,2026-05-29,Nephrology Follow-up,scheduled,Dr. Rohit Saxena,Nephrology,AV fistula creation counselling
+APT029,P015,2026-05-12,Cardiac Surgery Follow-up,completed,Dr. Rajan Mehta,Cardiothoracic Surgery,Sternal wound healing well. Echo EF 55%. Cardiac rehab started.
+APT030,P015,2026-05-28,Post-CABG Review,scheduled,Dr. Rajan Mehta,Cardiothoracic Surgery,Exercise stress test and lipid management
+APT031,P016,2026-05-28,Endocrinology Review,completed,Dr. Anjali Gupta,Endocrinology,TSH 4.2 mIU/L. Levothyroxine dose adjustment recommended.
+APT032,P016,2026-06-12,Thyroid Follow-up,scheduled,Dr. Anjali Gupta,Endocrinology,TSH recheck and cardiac monitoring
+APT033,P017,2026-05-20,Hepatology Review,completed,Dr. Deepak Agarwal,Hepatology,Ascites controlled. Albumin 2.8 g/dL. Varices surveillance planned.
+APT034,P017,2026-05-31,Liver Clinic,scheduled,Dr. Deepak Agarwal,Hepatology,Upper GI endoscopy for varices
+APT035,P018,2026-05-27,Rheumatology Review,completed,Dr. Pooja Verma,Rheumatology,DAS28 score 4.2. Flare partially controlled. MTX dose increased.
+APT036,P018,2026-06-10,RA Follow-up,scheduled,Dr. Pooja Verma,Rheumatology,Biologic therapy eligibility assessment
+APT037,P019,2026-05-22,Oncology Review,completed,Dr. Shobha Krishnan,Oncology,PSA 0.8 ng/mL. Radiation proctitis mild. Hormonal therapy ongoing.
+APT038,P019,2026-06-03,Prostate Cancer Follow-up,scheduled,Dr. Shobha Krishnan,Oncology,Bone density scan and PSA monitoring
+APT039,P020,2026-05-28,Endocrinology Review,completed,Dr. Anjali Gupta,Endocrinology,TSH 1.8 mIU/L. Calcium 9.2 mg/dL. Recovery satisfactory.
+APT040,P020,2026-06-20,Post-thyroid Surgery Follow-up,scheduled,Dr. Anjali Gupta,Endocrinology,Ultrasound neck and parathyroid hormone check
