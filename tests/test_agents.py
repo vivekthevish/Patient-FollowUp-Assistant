@@ -24,14 +24,14 @@ class AgentTestCase(unittest.TestCase):
             "follow_up_date": date.today() - timedelta(days=1),
         }
 
-        with patch.object(patient_summary_module, "OPENAI_API_KEY", ""):
+        with patch.object(patient_summary_module, "gemini_enabled", return_value=False):
             summary, risk_score = patient_summary_module.generate_patient_summary({"profile": profile}, "Protocol context")
 
         self.assertIn("Rajan Mehta", summary)
         self.assertIn("Protocol context reviewed", summary)
         self.assertGreater(risk_score, 9.0)
 
-    def test_generate_patient_summary_with_openai_uses_json_safe_payload(self) -> None:
+    def test_generate_patient_summary_with_gemini_uses_json_safe_payload(self) -> None:
         profile = {
             "patient_name": "Rajan Mehta",
             "age": 58,
@@ -41,15 +41,11 @@ class AgentTestCase(unittest.TestCase):
             "follow_up_date": date.today(),
         }
 
-        mock_response = unittest.mock.MagicMock()
-        mock_response.choices = [
-            unittest.mock.MagicMock(
-                message=unittest.mock.MagicMock(content='{"summary":"ok","risk_score":8.8}')
-            )
-        ]
+        mock_result = unittest.mock.MagicMock(summary="ok", risk_score=8.8)
 
-        with patch.object(patient_summary_module, "OPENAI_API_KEY", "test-key"), patch("openai.OpenAI") as mocked_openai:
-            mocked_openai.return_value.chat.completions.create.return_value = mock_response
+        with patch.object(patient_summary_module, "gemini_enabled", return_value=True), patch.object(
+            patient_summary_module, "generate_structured_response", return_value=mock_result
+        ):
             summary, risk_score = patient_summary_module.generate_patient_summary({"profile": profile}, "Protocol context")
 
         self.assertEqual(summary, "ok")
@@ -64,7 +60,7 @@ class AgentTestCase(unittest.TestCase):
         }
 
         rag_context = "Chunk one from the protocol.\n\n---\n\nChunk two from the protocol."
-        with patch.object(reminder_module, "OPENAI_API_KEY", ""):
+        with patch.object(reminder_module, "gemini_enabled", return_value=False):
             result = reminder_module.generate_reminder({"profile": profile}, summary="Please attend follow-up.", rag_context=rag_context)
 
         self.assertIn("Meena Reddy", result["reminder_text"])
@@ -72,7 +68,7 @@ class AgentTestCase(unittest.TestCase):
         self.assertEqual(len(result["rag_context_json"]), 2)
         self.assertIn("Dr. Anjali Sharma", result["email_subject"])
 
-    def test_generate_reminder_with_openai_uses_json_safe_payload(self) -> None:
+    def test_generate_reminder_with_gemini_uses_json_safe_payload(self) -> None:
         profile = {
             "patient_name": "Meena Reddy",
             "diagnosis": "Hypertension",
@@ -80,13 +76,11 @@ class AgentTestCase(unittest.TestCase):
             "attending_doctor": "Dr. Anjali Sharma",
         }
 
-        mock_response = unittest.mock.MagicMock()
-        mock_response.choices = [
-            unittest.mock.MagicMock(message=unittest.mock.MagicMock(content='{"reminder_text":"Take your follow-up."}'))
-        ]
+        mock_result = unittest.mock.MagicMock(reminder_text="Take your follow-up.")
 
-        with patch.object(reminder_module, "OPENAI_API_KEY", "test-key"), patch("openai.OpenAI") as mocked_openai:
-            mocked_openai.return_value.chat.completions.create.return_value = mock_response
+        with patch.object(reminder_module, "gemini_enabled", return_value=True), patch.object(
+            reminder_module, "generate_structured_response", return_value=mock_result
+        ):
             result = reminder_module.generate_reminder({"profile": profile}, summary="Please attend follow-up.", rag_context="")
 
         self.assertEqual(result["reminder_text"], "Take your follow-up.")
@@ -110,7 +104,7 @@ class AgentTestCase(unittest.TestCase):
                 "summary": "Patient missed follow-up.",
             }
 
-            with patch.object(escalation_module, "OPENAI_API_KEY", ""):
+            with patch.object(escalation_module, "gemini_enabled", return_value=False):
                 result = escalation_module.generate_escalation(
                     patient_data,
                     current_date=date.today(),
@@ -149,7 +143,7 @@ class AgentTestCase(unittest.TestCase):
                 "summary": "Existing escalation should cause skip.",
             }
 
-            with patch.object(escalation_module, "OPENAI_API_KEY", ""):
+            with patch.object(escalation_module, "gemini_enabled", return_value=False):
                 result = escalation_module.generate_escalation(
                     patient_data,
                     current_date=date.today(),

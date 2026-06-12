@@ -1,7 +1,7 @@
 # CareConnect — AI-Powered Patient Follow-Up System
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![OpenAI GPT-4](https://img.shields.io/badge/OpenAI-GPT--4-green.svg)](https://openai.com/)
+[![Google Gemini](https://img.shields.io/badge/Google-Gemini-blue.svg)](https://ai.google.dev/gemini-api)
 [![LangGraph](https://img.shields.io/badge/LangGraph-0.2.28-orange.svg)](https://github.com/langchain-ai/langgraph)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.38+-red.svg)](https://streamlit.io/)
 
@@ -98,7 +98,7 @@ Sequential workflow with conditional routing and human-in-the-loop:
 **Workflow Steps:**
 1. **START** → Load Patient Data (CSV: patients.csv, appointments.csv, followup_records.csv)
 2. **RAG Retrieval** → Fetch relevant medical protocols from ChromaDB
-3. **Patient Summary Agent** → Generate clinical summary + risk assessment (GPT-4o)
+3. **Patient Summary Agent** → Generate clinical summary + risk assessment (Gemini 3.1 Flash Lite)
 4. **Risk Router** → Route based on risk level:
    - **Low/Medium** → Reminder Agent
    - **High/Critical** → Escalation Agent
@@ -111,30 +111,29 @@ Sequential workflow with conditional routing and human-in-the-loop:
 **Memory Management:**
 - **MemorySaver (LangGraph Checkpointer)**: Maintains thread_id, state snapshots, interrupt context, conversation history
 
-#### 3. **AI Agents Layer** (OpenAI GPT-4o)
+#### 3. **AI Agents Layer** (Google Gemini 3.1 Flash Lite)
 
 **Patient Summary Agent:**
 - Input: patient_data + rag_context
 - Output: clinical_summary + risk_level
-- Model: GPT-4o with JSON mode
+- Model: Gemini 3.1 Flash Lite with structured JSON output
 
 **Reminder Agent:**
 - Input: patient_data + summary + rag_context
 - Output: [SMS, Email, Phone Script]
-- Model: GPT-4o with structured output
+- Model: Gemini 3.1 Flash Lite with structured output
 
 **Escalation Agent:**
 - Input: patient_data + summary
 - Output: escalation_report + actions
-- Model: GPT-4o with clinical brief
+- Model: Gemini 3.1 Flash Lite with clinical brief
 
 #### 4. **RAG Pipeline** (Retrieval-Augmented Generation)
 
 **Components:**
 - **Document Ingestion**: TextLoader → RecursiveCharacterTextSplitter (chunk_size=800)
-- **Embeddings**: OpenAI text-embedding-3-small (1536-dim vectors)
-- **Vector Store**: ChromaDB (persisted to ./chroma_db/)
-- **Retrieval**: Similarity search (k=4 chunks)
+- **Retrieval**: Local keyword scoring over protocol text chunks
+- **Vector Store**: ChromaDB is not required for the current workflow
 
 **Document Sources:**
 - Local: `data/documents/*.txt`
@@ -154,9 +153,8 @@ Sequential workflow with conditional routing and human-in-the-loop:
 
 #### 6. **External Services**
 
-**OpenAI API:**
-- GPT-4o: Text generation (clinical summaries, reminders, escalations)
-- text-embedding-3-small: Embeddings for RAG
+**Google Gemini API:**
+- Gemini 3.1 Flash Lite: Text generation (clinical summaries, reminders, escalations)
 - HTTPS: Secure API calls with retry logic (3x)
 
 **AWS Services (Optional):**
@@ -198,9 +196,9 @@ Clinician → Streamlit UI → Select Patient (P001)
 |-------|-----------|---------|
 | Frontend | Streamlit 1.38+ | Clinical dashboard |
 | Workflow | LangGraph 0.2.28 | State machine orchestration |
-| LLM | OpenAI GPT-4o | Clinical analysis & generation |
-| Embeddings | text-embedding-3-small | Vector representations |
-| Vector DB | ChromaDB 0.5.0 | RAG document store |
+| LLM | Gemini 3.1 Flash Lite | Clinical analysis & generation |
+| Retrieval | Local keyword scoring | Protocol lookup |
+| Vector DB | Not required | RAG document store |
 | Framework | LangChain 0.3.0 | LLM integration |
 | Data | Pandas 2.0+ | CSV processing |
 | Cloud | AWS (EC2, S3) | Deployment & storage |
@@ -271,7 +269,7 @@ Patient-FollowUp-Assistant/
 |------------|---------|-------|
 | Python | 3.10+ | 3.11 recommended |
 | pip | 23+ | Comes with Python |
-| OpenAI API Key | — | Required — get from [platform.openai.com](https://platform.openai.com) |
+| Gemini API Key | — | Required — get from [ai.google.dev/gemini-api](https://ai.google.dev/gemini-api) |
 | AWS Account | — | Optional (for S3 storage) |
 
 ### Step 1: Clone the Repository
@@ -296,10 +294,9 @@ pip install -r requirements.txt
 ```
 
 This installs:
-- `openai>=1.50.0` — OpenAI API client
+- `google-genai>=1.0.0` — Gemini API client
 - `langgraph>=0.2.28` — Workflow orchestration
 - `langchain>=0.3.0` — LLM framework
-- `langchain-openai>=0.2.0` — OpenAI integration
 - `langchain-chroma>=0.1.4` — ChromaDB integration
 - `chromadb>=0.5.0` — Vector database
 - `streamlit>=1.38.0` — Web dashboard
@@ -315,10 +312,11 @@ This installs:
 cp .env.template .env
 ```
 
-Edit `.env` and add your OpenAI API key:
+Edit `.env` and add your Gemini API key:
 
 ```env
-OPENAI_API_KEY=sk-your-openai-api-key-here
+GEMINI_API_KEY=your-gemini-api-key-here
+GEMINI_MODEL=gemini-3.1-flash-lite
 
 # Optional — only needed for AWS S3 storage
 AWS_ACCESS_KEY_ID=your-access-key-id
@@ -418,7 +416,9 @@ python main.py --rebuild-rag
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `OPENAI_API_KEY` | ✅ Yes | — | Your OpenAI API key |
+| `GEMINI_API_KEY` | ✅ Yes | — | Your Gemini API key |
+| `GOOGLE_API_KEY` | ❌ No | — | Alternate Gemini API key env var |
+| `GEMINI_MODEL` | ❌ No | `gemini-3.1-flash-lite` | Gemini model name |
 | `AWS_ACCESS_KEY_ID` | ❌ No | — | AWS access key (for S3) |
 | `AWS_SECRET_ACCESS_KEY` | ❌ No | — | AWS secret key (for S3) |
 | `AWS_REGION` | ❌ No | `us-east-1` | AWS region |
@@ -427,8 +427,8 @@ python main.py --rebuild-rag
 ### Model Settings (config.py)
 
 ```python
-MODEL_NAME = "gpt-4o"                    # OpenAI model
-EMBEDDING_MODEL = "text-embedding-3-small"  # Embedding model
+GEMINI_MODEL = "gemini-3.1-flash-lite"   # Gemini model
+EMBEDDING_MODEL = "text-embedding-3-small"  # Legacy setting, not used by current workflow
 MAX_RETRIES = 3                          # Retry attempts
 RETRY_DELAY = 2                          # Retry delay (seconds)
 TEMPERATURE = 0.3                        # LLM temperature
@@ -464,7 +464,7 @@ pip install -r ../requirements.txt
 
 # Configure
 cp ../.env.template ../.env
-nano ../.env   # Add your OPENAI_API_KEY
+nano ../.env   # Add your GEMINI_API_KEY
 
 # Build RAG
 python main.py --rebuild-rag
@@ -507,11 +507,11 @@ python main.py --rebuild-rag
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `OPENAI_API_KEY not set` | Missing .env file | Run `cp .env.template .env` and add your key |
+| `GEMINI_API_KEY not set` | Missing .env file | Run `cp .env.template .env` and add your Gemini key |
 | `Patient P001 not found` | Dataset path wrong | Ensure `data/datasets/` contains CSV files |
 | `No module named 'langgraph'` | Dependencies not installed | Run `pip install -r requirements.txt` |
 | `ChromaDB: no such file` | RAG not initialized | Run `python main.py --rebuild-rag` |
-| `openai.AuthenticationError` | Wrong API key | Check key in `.env` — should start with `sk-` |
+| `authentication` / `permission denied` | Wrong Gemini key | Check `GEMINI_API_KEY` in `.env` |
 | `Port 8501 already in use` | Another Streamlit running | Run `pkill -f streamlit` then restart |
 
 ---
@@ -535,7 +535,7 @@ All rights reserved.
 ## 🙏 Acknowledgments
 
 - **IIT Roorkee** — AIOps Capstone Program
-- **OpenAI** — GPT-4 and Embeddings API
+- **Google Gemini** — Gemini API for clinical text generation
 - **LangChain** — LangGraph framework
 - **Streamlit** — Dashboard framework
 

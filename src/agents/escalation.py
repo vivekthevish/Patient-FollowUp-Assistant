@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-import json
 import os
 import sqlite3
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Mapping, Optional
 
+from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_fixed
+
+from src.agents.gemini import gemini_enabled, generate_structured_response
 
 
 def _env(name: str, default: str = "") -> str:
@@ -17,12 +19,17 @@ def _env(name: str, default: str = "") -> str:
     return value if value is not None and value != "" else default
 
 
-OPENAI_API_KEY = _env("OPENAI_API_KEY")
-OPENAI_MODEL = _env("OPENAI_MODEL", _env("MODEL_NAME", "gpt-4o"))
-TEMPERATURE = float(_env("TEMPERATURE", "0.2"))
 MAX_RETRIES = int(_env("MAX_RETRIES", "3"))
 RETRY_DELAY = float(_env("RETRY_DELAY", "1"))
 DATABASE_URL = _env("DATABASE_URL", "sqlite:///data/db/app.db")
+
+
+class _EscalationResponse(BaseModel):
+    clinical_brief: str
+    missed_follow_up_reason: str
+    immediate_actions: list[str]
+    recommended_next_steps: list[str]
+    urgency_timeline: str
 
 
 def _database_path(database_url: str) -> Path:
@@ -135,12 +142,9 @@ def _format_report(report: Mapping[str, Any], context: dict[str, Any], current_d
 
 @retry(stop=stop_after_attempt(MAX_RETRIES), wait=wait_fixed(RETRY_DELAY), reraise=True)
 def _generate_report_with_llm(context: dict[str, Any], current_date: date) -> dict[str, Any]:
-    if not OPENAI_API_KEY:
+    if not gemini_enabled():
         return _fallback_report(context, current_date)
 
-    from openai import OpenAI
-
-    client = OpenAI(api_key=OPENAI_API_KEY)
     prompt = (
         "Generate a concise clinical escalation summary for a missed hospital follow-up.\n"
         "Use the following patient details and return valid JSON with keys:\n"
@@ -153,31 +157,20 @@ def _generate_report_with_llm(context: dict[str, Any], current_date: date) -> di
         f"Current Date: {current_date.isoformat()}\n"
         f"Patient Summary: {context.get('patient_summary', '') or 'Not available.'}\n"
     )
-
-    response = client.chat.completions.create(
-        model=OPENAI_MODEL,
-        temperature=TEMPERATURE,
-        response_format={"type": "json_object"},
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are a hospital escalation assistant. "
-                    "Be clinically careful, concise, and actionable."
-                ),
-            },
-            {"role": "user", "content": prompt},
-        ],
+    parsed = generate_structured_response(
+        prompt=prompt,
+        schema_model=_EscalationResponse,
+        system_instruction=(
+            "You are a hospital escalation assistant. "
+            "Be clinically careful, concise, and actionable."
+        ),
     )
-
-    content = response.choices[0].message.content or "{}"
-    parsed = json.loads(content)
     return {
-        "clinical_brief": parsed.get("clinical_brief", ""),
-        "missed_follow_up_reason": parsed.get("missed_follow_up_reason", ""),
-        "immediate_actions": parsed.get("immediate_actions", []),
-        "recommended_next_steps": parsed.get("recommended_next_steps", []),
-        "urgency_timeline": parsed.get("urgency_timeline", ""),
+        "clinical_brief": parsed.clinical_brief,
+        "missed_follow_up_reason": parsed.missed_follow_up_reason,
+        "immediate_actions": parsed.immediate_actions,
+        "recommended_next_steps": parsed.recommended_next_steps,
+        "urgency_timeline": parsed.urgency_timeline,
     }
 
 

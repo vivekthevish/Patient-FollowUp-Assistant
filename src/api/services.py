@@ -37,11 +37,12 @@ def _workflow_error_message(exc: Exception) -> str:
         if inner_exception is not None and inner_exception is not exc:
             return _workflow_error_message(inner_exception)
 
-    exception_name = exc.__class__.__name__
-    if exception_name == "RateLimitError":
-        return "OpenAI rate limit reached. Please retry the workflow in a moment."
-    if exception_name == "AuthenticationError":
-        return "OpenAI authentication failed. Check OPENAI_API_KEY and try again."
+    exception_name = exc.__class__.__name__.lower()
+    message = f"{exception_name} {exc}".strip().lower()
+    if any(token in message for token in ("rate limit", "resourceexhausted", "too many requests")):
+        return "Gemini rate limit reached. Please retry the workflow in a moment."
+    if any(token in message for token in ("authentication", "unauthorized", "permission denied", "forbidden")):
+        return "Gemini authentication failed. Check GEMINI_API_KEY and try again."
 
     message = str(exc).strip()
     return message or exception_name

@@ -6,9 +6,17 @@ import json
 from datetime import date
 from typing import Any, Mapping
 
-from src.config import MAX_RETRIES, OPENAI_API_KEY, OPENAI_MODEL, RETRY_DELAY, TEMPERATURE
+from pydantic import BaseModel
+
+from src.agents.gemini import gemini_enabled, generate_structured_response
+from src.config import MAX_RETRIES, RETRY_DELAY
 
 from tenacity import retry, stop_after_attempt, wait_fixed
+
+
+class _SummaryResponse(BaseModel):
+    summary: str
+    risk_score: float
 
 
 def _risk_from_severity(severity: str, days_overdue: int = 0) -> float:
@@ -44,34 +52,19 @@ def _fallback_summary(profile: Mapping[str, Any], rag_context: str) -> tuple[str
 def generate_patient_summary(patient_data: Mapping[str, Any], rag_context: str = "") -> tuple[str, float]:
     profile = patient_data.get("profile") if isinstance(patient_data.get("profile"), Mapping) else patient_data
 
-    if not OPENAI_API_KEY:
+    if not gemini_enabled():
         return _fallback_summary(profile, rag_context)
-
-    from openai import OpenAI
 
     prompt = {
         "patient_profile": profile,
         "rag_context": rag_context,
     }
-
-    client = OpenAI(api_key=OPENAI_API_KEY)
-    response = client.chat.completions.create(
-        model=OPENAI_MODEL,
-        temperature=TEMPERATURE,
-        response_format={"type": "json_object"},
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are a clinical AI assistant. "
-                    "Return valid JSON with keys summary and risk_score."
-                ),
-            },
-            {"role": "user", "content": json.dumps(prompt, default=str)},
-        ],
+    parsed = generate_structured_response(
+        prompt=json.dumps(prompt, default=str),
+        schema_model=_SummaryResponse,
+        system_instruction=(
+            "You are a clinical AI assistant. "
+            "Return valid JSON with keys summary and risk_score."
+        ),
     )
-
-    parsed = json.loads(response.choices[0].message.content or "{}")
-    summary = parsed.get("summary") or parsed.get("clinical_summary") or ""
-    risk_score = float(parsed.get("risk_score") or 5.0)
-    return summary, risk_score
+    return parsed.summary, float(parsed.risk_score)

@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
-import json
 from datetime import date
 from typing import Any, Mapping
 
+import json
+from pydantic import BaseModel
+
+from src.agents.gemini import gemini_enabled, generate_structured_response
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-from src.config import MAX_RETRIES, OPENAI_API_KEY, OPENAI_MODEL, RETRY_DELAY, TEMPERATURE
+from src.config import MAX_RETRIES, RETRY_DELAY
+
+
+class _ReminderResponse(BaseModel):
+    reminder_text: str
 
 
 def _fallback_reminder(profile: Mapping[str, Any], summary: str, rag_context: str) -> str:
@@ -37,32 +44,21 @@ def generate_reminder(patient_data: Mapping[str, Any], summary: str = "", rag_co
             for index, chunk in enumerate([part for part in rag_context.split("\n\n---\n\n") if part.strip()])
         ]
 
-    if OPENAI_API_KEY:
-        from openai import OpenAI
-
+    if gemini_enabled():
         prompt = {
             "patient_profile": profile,
             "patient_summary": summary,
             "rag_context": rag_context,
         }
-        client = OpenAI(api_key=OPENAI_API_KEY)
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            temperature=TEMPERATURE,
-            response_format={"type": "json_object"},
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a hospital reminder assistant. "
-                        "Return valid JSON with key reminder_text."
-                    ),
-                },
-                {"role": "user", "content": json.dumps(prompt, default=str)},
-            ],
+        parsed = generate_structured_response(
+            prompt=json.dumps(prompt, default=str),
+            schema_model=_ReminderResponse,
+            system_instruction=(
+                "You are a hospital reminder assistant. "
+                "Return valid JSON with key reminder_text."
+            ),
         )
-        parsed = json.loads(response.choices[0].message.content or "{}")
-        reminder_text = parsed.get("reminder_text") or reminder_text
+        reminder_text = parsed.reminder_text or reminder_text
 
     return {
         "reminder_text": reminder_text,

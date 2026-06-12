@@ -180,21 +180,18 @@ class APITestCase(unittest.TestCase):
         self.assertEqual(response.json()["results"][0]["email_status"], "sent")
 
     def test_workflow_error_message_unwraps_rate_limit(self) -> None:
-        class RateLimitError(Exception):
-            pass
-
-        direct_error = RateLimitError("too many requests")
+        direct_error = Exception("rate limit exceeded")
         future = Future()
         future.set_exception(direct_error)
         wrapped_error = RetryError(future)
 
         self.assertEqual(
             _workflow_error_message(wrapped_error),
-            "OpenAI rate limit reached. Please retry the workflow in a moment.",
+            "Gemini rate limit reached. Please retry the workflow in a moment.",
         )
         self.assertEqual(
             _workflow_error_message(direct_error),
-            "OpenAI rate limit reached. Please retry the workflow in a moment.",
+            "Gemini rate limit reached. Please retry the workflow in a moment.",
         )
 
     def test_fetch_escalations(self) -> None:
