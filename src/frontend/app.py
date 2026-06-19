@@ -16,17 +16,47 @@ st.set_page_config(
 )
 
 
-# Custom cohesive CSS theme styling mimicking the modern wireframe layout
+# Custom cohesive CSS theme styling with dark/light mode support
 def load_css():
     st.markdown(
         """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
     
+    /* Dark/Light Mode Variables */
+    :root {
+        --bg-primary: #FFFFFF;
+        --bg-secondary: #F8FAFC;
+        --bg-tertiary: #F1F5F9;
+        --text-primary: #0F172A;
+        --text-secondary: #475569;
+        --text-tertiary: #64748B;
+        --border-color: #E2E8F0;
+        --border-light: #F1F5F9;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --bg-primary: #1E293B;
+            --bg-secondary: #0F172A;
+            --bg-tertiary: #334155;
+            --text-primary: #F1F5F9;
+            --text-secondary: #CBD5E1;
+            --text-tertiary: #94A3B8;
+            --border-color: #334155;
+            --border-light: #475569;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+        }
+    }
+    
     /* Global App Background and Typography Override */
     .stApp {
-        background-color: #F8FAFC;
+        background-color: var(--bg-secondary);
         font-family: 'DM Sans', sans-serif;
+        color: var(--text-primary);
     }
     
     /* Clean Header bar alignment */
@@ -35,14 +65,14 @@ def load_css():
     header {visibility: hidden;}
     
     .custom-header {
-        background: #FFFFFF;
-        border-bottom: 1px solid #E2E8F0;
+        background: var(--bg-primary);
+        border-bottom: 2px solid var(--border-color);
         padding: 16px 32px;
         margin: -80px -80px 24px -80px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        box-shadow: var(--shadow-md);
     }
     
     .brand {
@@ -54,147 +84,296 @@ def load_css():
     .brand-icon {
         width: 40px;
         height: 40px;
-        background: #2563EB;
+        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
         border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         font-size: 20px;
+        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
     }
     
     .brand-name {
         font-size: 18px;
         font-weight: 700;
-        color: #0F172A;
+        color: var(--text-primary);
         letter-spacing: -0.02em;
     }
     
     .brand-sub {
         font-size: 11px;
-        color: #64748B;
+        color: var(--text-tertiary);
         font-weight: 500;
     }
     
     /* Sidebar adjustments */
     [data-testid="stSidebar"] {
-        background-color: #FFFFFF;
-        border-right: 1px solid #E2E8F0;
+        background-color: var(--bg-primary);
+        border-right: 2px solid var(--border-color);
+    }
+    
+    [data-testid="stSidebar"] * {
+        color: var(--text-primary) !important;
     }
     
     /* Standard Card containers */
     .card {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
+        background: var(--bg-primary);
+        border: 2px solid var(--border-color);
         border-radius: 12px;
         padding: 24px;
         margin-bottom: 20px;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+        box-shadow: var(--shadow-md);
     }
     
     .card-header {
         font-size: 13px;
         font-weight: 700;
-        color: #475569;
+        color: var(--text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin-bottom: 18px;
         padding-bottom: 10px;
-        border-bottom: 1px solid #F1F5F9;
+        border-bottom: 2px solid var(--border-light);
     }
     
     /* Micro Metric Cards */
     .metric-box {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
+        background: var(--bg-primary);
+        border: 2px solid var(--border-color);
         border-radius: 10px;
         padding: 16px;
         text-align: center;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+        box-shadow: var(--shadow-sm);
     }
     .metric-val {
         font-size: 28px;
         font-weight: 700;
-        color: #0F172A;
+        color: var(--text-primary);
         line-height: 1;
         margin-bottom: 4px;
     }
     .metric-lbl {
         font-size: 12px;
-        color: #64748B;
+        color: var(--text-tertiary);
         font-weight: 500;
     }
     
-    /* Design System Badges */
+    /* Design System Badges - Enhanced Contrast */
     .badge {
         display: inline-flex;
         align-items: center;
-        padding: 4px 10px;
+        padding: 6px 12px;
         border-radius: 6px;
-        font-size: 11px;
-        font-weight: 600;
+        font-size: 12px;
+        font-weight: 700;
         letter-spacing: 0.02em;
+        border: 2px solid;
     }
-    .badge-red { background: #FEF2F2; color: #DC2626; border: 1px solid #FEE2E2; }
-    .badge-amber { background: #FFFBEB; color: #D97706; border: 1px solid #FEF3C7; }
-    .badge-blue { background: #EFF6FF; color: #2563EB; border: 1px solid #DBEAFE; }
-    .badge-green { background: #F0FDF4; color: #16A34A; border: 1px solid #DCFCE7; }
-    .badge-gray { background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; }
+    .badge-red {
+        background: #FEE2E2;
+        color: #991B1B;
+        border-color: #DC2626;
+    }
+    .badge-amber {
+        background: #FEF3C7;
+        color: #92400E;
+        border-color: #F59E0B;
+    }
+    .badge-blue {
+        background: #DBEAFE;
+        color: #1E40AF;
+        border-color: #3B82F6;
+    }
+    .badge-green {
+        background: #DCFCE7;
+        color: #166534;
+        border-color: #22C55E;
+    }
+    .badge-gray {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .badge-red {
+            background: #7F1D1D;
+            color: #FEE2E2;
+            border-color: #EF4444;
+        }
+        .badge-amber {
+            background: #78350F;
+            color: #FEF3C7;
+            border-color: #FBBF24;
+        }
+        .badge-blue {
+            background: #1E3A8A;
+            color: #DBEAFE;
+            border-color: #60A5FA;
+        }
+        .badge-green {
+            background: #14532D;
+            color: #DCFCE7;
+            border-color: #4ADE80;
+        }
+    }
     
     /* Structured Text Panels */
     .info-panel {
-        background: #F8FAFC;
-        border: 1px solid #E2E8F0;
+        background: var(--bg-tertiary);
+        border: 2px solid var(--border-color);
         border-radius: 8px;
         padding: 14px 16px;
-        font-size: 12px;
+        font-size: 13px;
         line-height: 1.6;
-        color: #334155;
+        color: var(--text-primary);
+        font-weight: 500;
     }
     
     .clinical-quote {
-        background: #F0F9FF;
-        border-left: 4px solid #0EA5E9;
+        background: #DBEAFE;
+        border-left: 4px solid #2563EB;
         border-radius: 4px 8px 8px 4px;
         padding: 12px 14px;
-        font-size: 12px;
+        font-size: 13px;
         line-height: 1.6;
-        color: #0369A1;
+        color: #1E40AF;
         margin-top: 8px;
+        font-weight: 500;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .clinical-quote {
+            background: #1E3A8A;
+            color: #DBEAFE;
+            border-left-color: #60A5FA;
+        }
     }
     
     .escalation-alert-panel {
-        background: #FFF5F5;
-        border: 1px solid #FEB2B2;
-        border-left: 4px solid #E53E3E;
+        background: #FEE2E2;
+        border: 2px solid #DC2626;
+        border-left: 4px solid #991B1B;
         border-radius: 8px;
         padding: 14px;
-        font-size: 12px;
+        font-size: 13px;
         line-height: 1.6;
-        color: #9B2C2C;
+        color: #7F1D1D;
         margin: 12px 0;
+        font-weight: 600;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+        .escalation-alert-panel {
+            background: #7F1D1D;
+            color: #FEE2E2;
+            border-color: #EF4444;
+            border-left-color: #DC2626;
+        }
     }
 
     /* Tab Customizations styling overrides */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
-        background-color: #F1F5F9;
+        background-color: var(--bg-tertiary);
         padding: 6px 6px 0 6px;
         border-radius: 10px 10px 0 0;
+        border: 2px solid var(--border-color);
     }
     .stTabs [data-baseweb="tab"] {
         height: 40px;
         white-space: pre;
         background-color: transparent;
         border-radius: 8px 8px 0 0;
-        color: #64748B;
+        color: var(--text-tertiary);
         font-weight: 600;
         font-size: 13px;
         padding: 0 16px;
     }
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        background-color: #FFFFFF;
+        background-color: var(--bg-primary);
         color: #2563EB;
+        border: 2px solid var(--border-color);
+        border-bottom: none;
+    }
+    
+    /* Streamlit Input Fields Enhancement */
+    .stTextInput input, .stTextArea textarea, .stSelectbox select, .stNumberInput input {
+        background-color: var(--bg-primary) !important;
+        color: var(--text-primary) !important;
+        border: 2px solid var(--border-color) !important;
+        font-weight: 500 !important;
+    }
+    
+    .stTextInput input:focus, .stTextArea textarea:focus, .stSelectbox select:focus {
+        border-color: #2563EB !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+    }
+    
+    /* Button Enhancements */
+    .stButton button {
+        font-weight: 600 !important;
+        border: 2px solid transparent !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .stButton button[kind="primary"] {
+        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
+        color: white !important;
+        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3) !important;
+    }
+    
+    .stButton button[kind="primary"]:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.4) !important;
+    }
+    
+    /* Expander Enhancement */
+    .streamlit-expanderHeader {
+        background-color: var(--bg-primary) !important;
+        border: 2px solid var(--border-color) !important;
+        border-radius: 8px !important;
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+    }
+    
+    .streamlit-expanderContent {
+        background-color: var(--bg-primary) !important;
+        border: 2px solid var(--border-color) !important;
+        border-top: none !important;
+        color: var(--text-primary) !important;
+    }
+    
+    /* Markdown text color fix */
+    .stMarkdown, .stMarkdown p, .stMarkdown li, .stMarkdown h1, .stMarkdown h2,
+    .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Radio button enhancement */
+    .stRadio label {
+        color: var(--text-primary) !important;
+        font-weight: 500 !important;
+    }
+    
+    /* Metric enhancement */
+    [data-testid="stMetric"] {
+        background-color: var(--bg-primary);
+        padding: 12px;
+        border-radius: 8px;
+        border: 2px solid var(--border-color);
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: var(--text-secondary) !important;
+        font-weight: 600 !important;
+    }
+    
+    [data-testid="stMetricValue"] {
+        color: var(--text-primary) !important;
+        font-weight: 700 !important;
     }
     </style>
     """,
