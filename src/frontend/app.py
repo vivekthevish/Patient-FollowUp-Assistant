@@ -391,8 +391,9 @@ def init_session_state():
 
 
 def render_header():
+    today_str = datetime.today().strftime("%d %B %Y").lstrip("0")
     st.markdown(
-        """
+        f"""
     <div class="custom-header">
         <div class="brand">
             <div class="brand-icon">🏥</div>
@@ -402,7 +403,7 @@ def render_header():
             </div>
         </div>
         <div style="font-size: 13px; color: #475569; font-weight: 600; background: #F1F5F9; padding: 6px 14px; border-radius: 20px;">
-            📅 System Date: <span style="color: #2563EB;">15 June 2026</span>
+            📅 System Date: <span style="color: #2563EB;">{today_str}</span>
         </div>
     </div>
     """,
