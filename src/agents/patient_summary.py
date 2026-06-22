@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from src.agents.gemini import gemini_enabled, generate_structured_response
 from src.config import MAX_RETRIES, RETRY_DELAY
 
-from tenacity import retry, stop_after_attempt, wait_fixed
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 
 class _SummaryResponse(BaseModel):
@@ -48,7 +48,11 @@ def _fallback_summary(profile: Mapping[str, Any], rag_context: str) -> tuple[str
     return summary, risk_score
 
 
-@retry(stop=stop_after_attempt(MAX_RETRIES), wait=wait_fixed(RETRY_DELAY), reraise=True)
+@retry(
+    stop=stop_after_attempt(MAX_RETRIES),
+    wait=wait_exponential(multiplier=1, min=1, max=4),
+    reraise=True
+)
 def generate_patient_summary(patient_data: Mapping[str, Any], rag_context: str = "") -> tuple[str, float]:
     profile = patient_data.get("profile") if isinstance(patient_data.get("profile"), Mapping) else patient_data
 

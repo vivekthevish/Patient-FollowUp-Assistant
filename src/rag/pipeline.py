@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 from typing import Iterable
 
 from src.config import PROTOCOLS_DIR
+
+
+logger = logging.getLogger(__name__)
 
 
 _SUPPORTED_EXTENSIONS = {".txt", ".md"}
@@ -66,8 +70,15 @@ def retrieve_context_chunks(query: str, k: int = 3) -> list[dict]:
 
 
 def get_rag_context(query: str, k: int = 3) -> str:
-    chunks = retrieve_context_chunks(query, k=k)
-    return "\n\n---\n\n".join(
-        f"[Source: {chunk['source']} | Page: {chunk['page']}]\n{chunk['chunk']}" for chunk in chunks
-    )
+    try:
+        chunks = retrieve_context_chunks(query, k=k)
+        if not chunks:
+            logger.warning(f"ChromaDB retrieval returned empty for query: {query}")
+            return ""
+        return "\n\n---\n\n".join(
+            f"[Source: {chunk['source']} | Page: {chunk['page']}]\n{chunk['chunk']}" for chunk in chunks
+        )
+    except Exception as exc:
+        logger.error(f"RAG context retrieval failed for query '{query}': {exc}", exc_info=True)
+        return ""
 

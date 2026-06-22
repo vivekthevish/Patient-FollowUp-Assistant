@@ -22,6 +22,8 @@ def run_workflow(session: Session = Depends(get_db)):
         "escalation_patients": record["escalation_patients"],
         "skipped_patients": record["skipped_patients"],
         "status": record["status"],
+        "processed": record["processed"],
+        "total": record["total"],
         "message": (
             f"Workflow started. {len(record['reminder_patients'])} reminders, "
             f"{len(record['escalation_patients'])} escalations, "

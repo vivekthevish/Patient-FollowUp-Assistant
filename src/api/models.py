@@ -96,6 +96,8 @@ class WorkflowRunResponse(BaseModel):
     skipped_patients: list[str]
     status: str
     message: str
+    processed: int = 0
+    total: int = 0
 
 
 class WorkflowResultItem(BaseModel):
@@ -110,6 +112,8 @@ class WorkflowStatusResponse(BaseModel):
     job_id: str
     status: str
     results: list[WorkflowResultItem] = Field(default_factory=list)
+    processed: int = 0
+    total: int = 0
     completed_at: Optional[datetime] = None
     error: Optional[str] = None
 
@@ -151,6 +155,8 @@ class WorkflowJobRecord(BaseModel):
     escalation_patients: list[str]
     skipped_patients: list[str]
     results: list[WorkflowResultItem] = Field(default_factory=list)
+    processed: int = 0
+    total: int = 0
     completed_at: Optional[datetime] = None
     error: Optional[str] = None
 

@@ -388,6 +388,8 @@ def init_session_state():
         st.session_state.last_job_id = None
     if "workflow_results" not in st.session_state:
         st.session_state.workflow_results = None
+    if "workflow_total" not in st.session_state:
+        st.session_state.workflow_total = 0
 
 
 def render_header():
@@ -590,32 +592,65 @@ def render_patient_management():
     )
 
     if st.button("▶️ Execute Automation Engine Loop Run", type="primary"):
-        with st.spinner("Processing background agent operations..."):
-            try:
-                res = requests.post(f"{API_BASE_URL}/workflow/run")
-                if res.status_code == 202:
-                    st.session_state.last_job_id = res.json().get("job_id")
-                    st.session_state.workflow_running = True
-                else:
-                    st.error("Workflow initialization error.")
-            except Exception as e:
-                st.error(f"Error connecting: {e}")
-
-    # Handling pseudo async interface update tracking
-    if st.session_state.workflow_running and st.session_state.last_job_id:
-        p_bar = st.progress(0)
-        for p in [25, 60, 90, 100]:
-            time.sleep(0.3)
-            p_bar.progress(p)
         try:
-            status_res = requests.get(
-                f"{API_BASE_URL}/workflow/status/{st.session_state.last_job_id}"
-            )
-            if status_res.status_code == 200:
-                st.session_state.workflow_results = status_res.json()
-                st.success("Analysis cycle concluded successfully!")
-            st.session_state.workflow_running = False
-        except Exception:
+            res = requests.post(f"{API_BASE_URL}/workflow/run")
+            if res.status_code == 202:
+                job_data = res.json()
+                st.session_state.last_job_id = job_data.get("job_id")
+                st.session_state.workflow_running = True
+                st.session_state.workflow_total = job_data.get("total", 0)
+            else:
+                st.error("Workflow initialization error.")
+        except Exception as e:
+            st.error(f"Error connecting: {e}")
+
+    # Real-time progress tracking with polling
+    if st.session_state.workflow_running and st.session_state.last_job_id:
+        progress_placeholder = st.empty()
+        status_placeholder = st.empty()
+        
+        try:
+            while True:
+                status_res = requests.get(
+                    f"{API_BASE_URL}/workflow/status/{st.session_state.last_job_id}"
+                )
+                
+                if status_res.status_code == 200:
+                    status_data = status_res.json()
+                    processed = status_data.get("processed", 0)
+                    total = status_data.get("total", st.session_state.workflow_total)
+                    status = status_data.get("status", "running")
+                    
+                    # Calculate progress percentage
+                    if total > 0:
+                        progress_pct = processed / total
+                        progress_placeholder.progress(progress_pct, text=f"Processing patients: {processed}/{total}")
+                    else:
+                        progress_placeholder.progress(0, text="Initializing workflow...")
+                    
+                    # Check if completed or failed
+                    if status == "completed":
+                        progress_placeholder.progress(1.0, text=f"Completed: {processed}/{total} patients processed")
+                        st.session_state.workflow_results = status_data
+                        status_placeholder.success("✅ Workflow completed successfully! All patients processed.")
+                        st.session_state.workflow_running = False
+                        time.sleep(1)  # Brief pause to show completion
+                        break
+                    elif status == "failed":
+                        error_msg = status_data.get("error", "Unknown error")
+                        status_placeholder.error(f"❌ Workflow failed: {error_msg}")
+                        st.session_state.workflow_running = False
+                        break
+                    
+                    # Still running, wait before next poll
+                    time.sleep(1)
+                else:
+                    status_placeholder.error("Failed to fetch workflow status")
+                    st.session_state.workflow_running = False
+                    break
+                    
+        except Exception as e:
+            status_placeholder.error(f"Error tracking workflow: {e}")
             st.session_state.workflow_running = False
 
     # Pull and cleanly map down tabular results
@@ -764,14 +799,31 @@ def render_escalations():
             if is_pending
             else '<span class="badge badge-green">✅ RESOLVED TRACKING</span>'
         )
+        
+        # Calculate days pending and days overdue
+        try:
+            created_date = datetime.fromisoformat(esc["created_at"].replace("Z", "+00:00"))
+            today = datetime.now()
+            days_pending = (today - created_date).days
+            
+            # Calculate days overdue from follow-up date
+            followup_date = datetime.fromisoformat(esc["follow_up_date"]).date()
+            today_date = date.today()
+            days_overdue = (today_date - followup_date).days
+        except Exception:
+            days_pending = 0
+            days_overdue = 0
 
         st.markdown(
             f"""
             <div class="card" style="border-top: 4px solid {"#DC2626" if is_pending else "#64748B"};">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
-                    <div>
-                        <h4 style="margin:0; color:#0F172A;">Patient: {esc["patient_name"]} <span style="font-size:12px; font-weight:400; color:#64748B;">(ID: {esc["patient_id"]})</span></h4>
-                        <small style="color:#64748B;">Target Appointment Date: {esc["follow_up_date"]} | Discovered Trigger Log: {esc["created_at"]}</small>
+                    <div style="flex:1;">
+                        <h4 style="margin:0; color:var(--text-primary);">Patient: {esc["patient_name"]} <span style="font-size:12px; font-weight:400; color:var(--text-tertiary);">(ID: {esc["patient_id"]})</span></h4>
+                        <div style="margin-top:8px; display:flex; gap:16px; flex-wrap:wrap;">
+                            <small style="color:var(--text-secondary);"><strong>Missed Appointment:</strong> {esc["follow_up_date"]} <span style="color:#DC2626; font-weight:600;">({days_overdue} days overdue)</span></small>
+                            <small style="color:var(--text-secondary);"><strong>Escalation Created:</strong> {esc["created_at"][:10]} <span style="color:#F59E0B; font-weight:600;">({days_pending} days pending)</span></small>
+                        </div>
                     </div>
                     <div>{badge_element}</div>
                 </div>
@@ -780,8 +832,32 @@ def render_escalations():
             unsafe_allow_html=True,
         )
 
+        # Display key metrics
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric(
+                label="Days Since Missed Appointment",
+                value=f"{days_overdue} days",
+                delta=None,
+            )
+        with col2:
+            st.metric(
+                label="Escalation Pending Duration",
+                value=f"{days_pending} days",
+                delta=None,
+            )
+        with col3:
+            urgency_label = "🔴 CRITICAL" if days_overdue > 7 else "🟡 HIGH" if days_overdue > 3 else "🟠 MODERATE"
+            st.markdown(
+                f"<div style='text-align:center; padding:12px; background:var(--bg-tertiary); border-radius:8px; border:2px solid var(--border-color);'>"
+                f"<div style='font-size:11px; color:var(--text-tertiary); font-weight:600; margin-bottom:4px;'>URGENCY LEVEL</div>"
+                f"<div style='font-size:16px; font-weight:700; color:var(--text-primary);'>{urgency_label}</div>"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+
         st.markdown(
-            "**🤖 Synthesized Patient Clinical Analysis Escalation Report Summary:**"
+            "**🤖 AI-Generated Clinical Escalation Report:**"
         )
         st.markdown(
             f"<div class='escalation-alert-panel'>{esc['escalation_report']}</div>",

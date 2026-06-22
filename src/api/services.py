@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import threading
 import uuid
 from datetime import date, datetime
@@ -20,6 +21,8 @@ from src.db.session import SessionLocal
 from src.email.ses import send_email
 from src.rag.pipeline import get_rag_context, retrieve_context_chunks
 
+
+logger = logging.getLogger(__name__)
 
 REMINDER_WINDOWS = {7, 3, 1}
 WORKFLOW_JOBS: dict[str, dict] = {}
@@ -386,20 +389,23 @@ def _run_workflow_job(job_id: str) -> None:
             reminder_patients, escalation_patients, skipped_patients = _classify_patients(session)
             for patient in reminder_patients:
                 try:
-                    summary, _risk_score = _summarize_patient(session, patient)
-                    session.commit()
+                    # Check for duplicate reminder BEFORE making any API calls
                     if _duplicate_reminder_today(session, patient.patient_id):
+                        logger.info(f"Skipping patient {patient.patient_id}: reminder already sent today")
                         with WORKFLOW_JOBS_LOCK:
                             WORKFLOW_JOBS[job_id]["results"].append(
                                 {
                                     "patient_id": patient.patient_id,
                                     "path": "reminder",
                                     "status": "skipped",
-                                "error": "Reminder already sent today.",
-                            }
-                        )
-                        session.commit()
+                                    "error": "Reminder already sent today.",
+                                }
+                            )
+                            WORKFLOW_JOBS[job_id]["processed"] += 1
                         continue
+                    
+                    summary, _risk_score = _summarize_patient(session, patient)
+                    session.commit()
                     reminder_result = _create_reminder(session, patient, summary)
                     with WORKFLOW_JOBS_LOCK:
                         WORKFLOW_JOBS[job_id]["results"].append(
@@ -411,18 +417,25 @@ def _run_workflow_job(job_id: str) -> None:
                                 "error": reminder_result["error"],
                             }
                         )
+                        WORKFLOW_JOBS[job_id]["processed"] += 1
                     session.commit()
                 except Exception as exc:
                     session.rollback()
+                    error_msg = _workflow_error_message(exc)
+                    logger.error(
+                        f"Failed to process reminder for patient {patient.patient_id}: {error_msg}",
+                        exc_info=True
+                    )
                     with WORKFLOW_JOBS_LOCK:
                         WORKFLOW_JOBS[job_id]["results"].append(
                             {
                                 "patient_id": patient.patient_id,
                                 "path": "reminder",
                                 "status": "failed",
-                                "error": _workflow_error_message(exc),
+                                "error": error_msg,
                             }
                         )
+                        WORKFLOW_JOBS[job_id]["processed"] += 1
 
             for patient in escalation_patients:
                 try:
@@ -437,32 +450,42 @@ def _run_workflow_job(job_id: str) -> None:
                                 "error": escalation_result["error"],
                             }
                         )
+                        WORKFLOW_JOBS[job_id]["processed"] += 1
                     session.commit()
                 except Exception as exc:
                     session.rollback()
+                    error_msg = _workflow_error_message(exc)
+                    logger.error(
+                        f"Failed to process escalation for patient {patient.patient_id}: {error_msg}",
+                        exc_info=True
+                    )
                     with WORKFLOW_JOBS_LOCK:
                         WORKFLOW_JOBS[job_id]["results"].append(
                             {
                                 "patient_id": patient.patient_id,
                                 "path": "escalation",
                                 "status": "failed",
-                                "error": _workflow_error_message(exc),
+                                "error": error_msg,
                             }
                         )
+                        WORKFLOW_JOBS[job_id]["processed"] += 1
 
             with WORKFLOW_JOBS_LOCK:
                 WORKFLOW_JOBS[job_id]["status"] = "completed"
                 WORKFLOW_JOBS[job_id]["completed_at"] = now_utc()
         except Exception as exc:
+            error_msg = _workflow_error_message(exc)
+            logger.error(f"Workflow job {job_id} failed: {error_msg}", exc_info=True)
             with WORKFLOW_JOBS_LOCK:
                 WORKFLOW_JOBS[job_id]["status"] = "failed"
-                WORKFLOW_JOBS[job_id]["error"] = _workflow_error_message(exc)
+                WORKFLOW_JOBS[job_id]["error"] = error_msg
                 WORKFLOW_JOBS[job_id]["completed_at"] = now_utc()
 
 
 def start_workflow_job(session: Session) -> dict:
     reminder_patients, escalation_patients, skipped_patients = _classify_patients(session)
     job_id = f"job_{uuid.uuid4().hex[:8]}"
+    total_patients = len(reminder_patients) + len(escalation_patients)
     record = {
         "job_id": job_id,
         "status": "running",
@@ -470,6 +493,8 @@ def start_workflow_job(session: Session) -> dict:
         "escalation_patients": [patient.patient_id for patient in escalation_patients],
         "skipped_patients": [patient.patient_id for patient in skipped_patients],
         "results": [],
+        "processed": 0,
+        "total": total_patients,
         "completed_at": None,
         "error": None,
     }

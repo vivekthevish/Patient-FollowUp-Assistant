@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+import json
+import logging
 from datetime import date
 from typing import Any, Mapping
 
-import json
 from pydantic import BaseModel
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from src.agents.gemini import gemini_enabled, generate_structured_response
-from tenacity import retry, stop_after_attempt, wait_fixed
-
 from src.config import MAX_RETRIES, RETRY_DELAY
+
+
+logger = logging.getLogger(__name__)
 
 
 class _ReminderResponse(BaseModel):
@@ -32,17 +35,29 @@ def _fallback_reminder(profile: Mapping[str, Any], summary: str, rag_context: st
     )
 
 
-@retry(stop=stop_after_attempt(MAX_RETRIES), wait=wait_fixed(RETRY_DELAY), reraise=True)
+@retry(
+    stop=stop_after_attempt(MAX_RETRIES),
+    wait=wait_exponential(multiplier=1, min=1, max=4),
+    reraise=True
+)
 def generate_reminder(patient_data: Mapping[str, Any], summary: str = "", rag_context: str = "") -> dict[str, Any]:
     profile = patient_data.get("profile") if isinstance(patient_data.get("profile"), Mapping) else patient_data
 
     reminder_text = _fallback_reminder(profile, summary, rag_context)
-    rag_chunks = []
+    rag_chunks = None
     if rag_context:
         rag_chunks = [
             {"source": "protocols", "page": index + 1, "chunk": chunk.strip()}
             for index, chunk in enumerate([part for part in rag_context.split("\n\n---\n\n") if part.strip()])
         ]
+        # If parsing resulted in empty list, set to None
+        if not rag_chunks:
+            rag_chunks = None
+    else:
+        logger.warning(
+            f"RAG context empty for patient {profile.get('patient_id') if isinstance(profile, Mapping) else 'unknown'}, "
+            "falling back to LLM-only generation"
+        )
 
     if gemini_enabled():
         prompt = {

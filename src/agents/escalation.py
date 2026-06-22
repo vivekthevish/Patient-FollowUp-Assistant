@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import sqlite3
 from datetime import date, datetime
@@ -9,9 +10,12 @@ from pathlib import Path
 from typing import Any, Mapping, Optional
 
 from pydantic import BaseModel
-from tenacity import retry, stop_after_attempt, wait_fixed
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from src.agents.gemini import gemini_enabled, generate_structured_response
+
+
+logger = logging.getLogger(__name__)
 
 
 def _env(name: str, default: str = "") -> str:
@@ -140,7 +144,11 @@ def _format_report(report: Mapping[str, Any], context: dict[str, Any], current_d
     return "\n".join(parts).strip()
 
 
-@retry(stop=stop_after_attempt(MAX_RETRIES), wait=wait_fixed(RETRY_DELAY), reraise=True)
+@retry(
+    stop=stop_after_attempt(MAX_RETRIES),
+    wait=wait_exponential(multiplier=1, min=1, max=4),
+    reraise=True
+)
 def _generate_report_with_llm(context: dict[str, Any], current_date: date) -> dict[str, Any]:
     if not gemini_enabled():
         return _fallback_report(context, current_date)
@@ -242,6 +250,7 @@ def generate_escalation(
 
     with _connect(database_url) as connection:
         if _existing_escalation(connection, context["patient_id"]) is not None:
+            logger.info(f"Skipping patient {context['patient_id']}: escalation already exists")
             return {
                 "patient_id": context["patient_id"],
                 "escalation_skipped": True,
