@@ -131,12 +131,12 @@ Sequential workflow with conditional routing and human-in-the-loop:
 #### 4. **RAG Pipeline** (Retrieval-Augmented Generation)
 
 **Components:**
-- **Document Ingestion**: TextLoader → RecursiveCharacterTextSplitter (chunk_size=800)
-- **Retrieval**: Local keyword scoring over protocol text chunks
-- **Vector Store**: ChromaDB is not required for the current workflow
+- **Document Ingestion**: Direct protocol text/PDF chunking from `data/protocols`
+- **Retrieval**: ChromaDB similarity search over embedding vectors
+- **Vector Store**: ChromaDB local persistent storage under `chroma_db/`
 
 **Document Sources:**
-- Local: `data/documents/*.txt`
+- Local: `data/protocols/*`
 - Cloud: AWS S3 bucket (optional fallback)
 
 #### 5. **Data Layer**
@@ -418,7 +418,8 @@ python main.py --rebuild-rag
 |----------|----------|---------|-------------|
 | `GEMINI_API_KEY` | ✅ Yes | — | Your Gemini API key |
 | `GOOGLE_API_KEY` | ❌ No | — | Alternate Gemini API key env var |
-| `GEMINI_MODEL` | ❌ No | `gemini-3.1-flash-lite` | Gemini model name |
+| `GEMINI_MODEL` | ❌ No | `gemini-3.1-flash-lite` | Gemini LLM model name |
+| `EMBEDDING_MODEL` | ❌ No | `gemini-embedding-001` | Gemini embedding model used by Chroma |
 | `AWS_ACCESS_KEY_ID` | ❌ No | — | AWS access key (for S3) |
 | `AWS_SECRET_ACCESS_KEY` | ❌ No | — | AWS secret key (for S3) |
 | `AWS_REGION` | ❌ No | `us-east-1` | AWS region |
@@ -427,8 +428,8 @@ python main.py --rebuild-rag
 ### Model Settings (config.py)
 
 ```python
-GEMINI_MODEL = "gemini-3.1-flash-lite"   # Gemini model
-EMBEDDING_MODEL = "text-embedding-3-small"  # Legacy setting, not used by current workflow
+GEMINI_MODEL = "gemini-3.1-flash-lite"   # Gemini model for text generation
+EMBEDDING_MODEL = "gemini-embedding-001"  # Gemini embedding model used for ChromaDB vectorization
 MAX_RETRIES = 3                          # Retry attempts
 RETRY_DELAY = 2                          # Retry delay (seconds)
 TEMPERATURE = 0.3                        # LLM temperature
