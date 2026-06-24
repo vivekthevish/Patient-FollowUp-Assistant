@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-One-time script to index protocol files into ChromaDB (or validate keyword index).
+Script to index protocol files into ChromaDB vector database.
 
 Usage:
     cd patient-followup-assistant
@@ -8,15 +8,20 @@ Usage:
 
 What it does:
     1. Reads all .txt / .pdf files from data/protocols/
-    2. Validates that retrieve_context_chunks() returns results for each diagnosis
-    3. Prints a summary so you can confirm the RAG pipeline is working
+    2. Chunks the content with overlap
+    3. Generates embeddings using Google Generative AI
+    4. Stores vectors in ChromaDB for semantic search
+    5. Validates retrieval with test queries
 
-No ChromaDB build step is needed — the RAG pipeline uses keyword scoring on raw files.
-Run this once after cloning to confirm the protocols directory is set up correctly.
+Run this script:
+    - After cloning the repository (first time setup)
+    - When adding new protocol files
+    - To rebuild the index (use --reset flag)
 """
 
 import sys
 import logging
+import argparse
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
@@ -37,40 +42,101 @@ TEST_QUERIES = [
 
 
 def main() -> None:
-    from src.config import PROTOCOLS_DIR
-    from src.rag.pipeline import retrieve_context_chunks
+    parser = argparse.ArgumentParser(description="Index protocol files into ChromaDB")
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="Reset the vectorstore before indexing (deletes all existing data)",
+    )
+    parser.add_argument(
+        "--skip-validation",
+        action="store_true",
+        help="Skip validation queries after indexing",
+    )
+    args = parser.parse_args()
 
-    if not PROTOCOLS_DIR.exists():
-        logger.error(f"Protocols directory not found: {PROTOCOLS_DIR}")
-        logger.error("Copy your protocol files to data/protocols/ and retry.")
-        sys.exit(1)
+    try:
+        from src.config import PROTOCOLS_DIR, CHROMA_PERSIST_DIR, GEMINI_API_KEY
+        from src.rag.pipeline import index_protocols, reset_vectorstore, retrieve_context_chunks
 
-    files = list(PROTOCOLS_DIR.rglob("*"))
-    supported = [f for f in files if f.is_file() and f.suffix.lower() in {".txt", ".md", ".pdf"}]
+        # Check API key
+        if not GEMINI_API_KEY:
+            logger.error("GOOGLE_API_KEY or GEMINI_API_KEY must be set in .env file")
+            logger.error("Copy .env.template to .env and add your API key")
+            sys.exit(1)
 
-    if not supported:
-        logger.error(f"No protocol files found in {PROTOCOLS_DIR}")
-        logger.error("Add .txt, .md, or .pdf protocol files and retry.")
-        sys.exit(1)
+        # Check protocols directory
+        if not PROTOCOLS_DIR.exists():
+            logger.error(f"Protocols directory not found: {PROTOCOLS_DIR}")
+            logger.error("Copy your protocol files to data/protocols/ and retry.")
+            sys.exit(1)
 
-    logger.info(f"Found {len(supported)} protocol file(s): {[f.name for f in supported]}")
-    logger.info("Running retrieval test for sample diagnoses...\n")
+        files = list(PROTOCOLS_DIR.rglob("*"))
+        supported = [f for f in files if f.is_file() and f.suffix.lower() in {".txt", ".md", ".pdf"}]
 
-    all_ok = True
-    for query in TEST_QUERIES:
-        chunks = retrieve_context_chunks(query, k=3)
-        if chunks:
-            logger.info(f"[OK]  '{query}' → {len(chunks)} chunk(s) from {chunks[0]['source']}")
+        if not supported:
+            logger.error(f"No protocol files found in {PROTOCOLS_DIR}")
+            logger.error("Add .txt, .md, or .pdf protocol files and retry.")
+            sys.exit(1)
+
+        logger.info(f"Found {len(supported)} protocol file(s): {[f.name for f in supported]}")
+        
+        # Reset if requested
+        if args.reset:
+            logger.info("Resetting vectorstore...")
+            reset_vectorstore()
+            logger.info("Vectorstore reset complete")
+
+        # Index protocols
+        logger.info("Starting indexing process...")
+        logger.info(f"ChromaDB will be stored at: {CHROMA_PERSIST_DIR}")
+        
+        num_chunks = index_protocols()
+        
+        if num_chunks == 0:
+            logger.info("No new documents to index (all already present)")
+            logger.info("Use --reset flag to rebuild the entire index")
         else:
-            logger.warning(f"[WARN] '{query}' → 0 chunks returned (no keyword match)")
-            all_ok = False
+            logger.info(f"Successfully indexed {num_chunks} chunks")
 
-    print()
-    if all_ok:
-        logger.info("RAG index validation passed. Protocol files are ready.")
-    else:
-        logger.warning("Some queries returned 0 chunks. Check protocol file content.")
+        # Validation
+        if not args.skip_validation:
+            logger.info("\nRunning retrieval validation with test queries...\n")
+            
+            all_ok = True
+            for query in TEST_QUERIES:
+                try:
+                    chunks = retrieve_context_chunks(query, k=3)
+                    if chunks:
+                        sources = {chunk['source'] for chunk in chunks}
+                        logger.info(f"[OK]  '{query}' → {len(chunks)} chunk(s) from {', '.join(sources)}")
+                    else:
+                        logger.warning(f"[WARN] '{query}' → 0 chunks returned")
+                        all_ok = False
+                except Exception as exc:
+                    logger.error(f"[ERROR] '{query}' → {exc}")
+                    all_ok = False
+
+            print()
+            if all_ok:
+                logger.info("✓ ChromaDB index validation passed. RAG pipeline is ready.")
+            else:
+                logger.warning("⚠ Some queries returned 0 chunks. Check protocol file content.")
+        
+        logger.info("\nIndexing complete!")
+        logger.info(f"ChromaDB data stored at: {CHROMA_PERSIST_DIR}")
+        logger.info("You can now run the application with: python -m src.api.main")
+
+    except ImportError as exc:
+        logger.error(f"Import error: {exc}")
+        logger.error("Make sure all dependencies are installed: pip install -r requirements.txt")
+        sys.exit(1)
+    except Exception as exc:
+        logger.error(f"Indexing failed: {exc}", exc_info=True)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
     main()
+
+# Made with Bob

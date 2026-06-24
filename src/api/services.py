@@ -14,8 +14,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.agents.escalation import generate_escalation
+from src.agents.graph import workflow_graph
 from src.agents.patient_summary import generate_patient_summary
 from src.agents.reminder import generate_reminder
+from src.agents.state import PatientWorkflowState
 from src.db.models import Escalation, Patient, Reminder
 from src.db.session import SessionLocal
 from src.email.ses import send_email
@@ -535,3 +537,179 @@ def close_escalation(session: Session, escalation_id: int, closed_by: str) -> di
         "closed_at": escalation.closed_at,
         "message": "Escalation marked as closed.",
     }
+
+
+
+def _patient_to_workflow_state(patient: Patient) -> PatientWorkflowState:
+    """Convert a Patient model to PatientWorkflowState for LangGraph."""
+    return PatientWorkflowState(
+        patient_id=patient.patient_id,
+        patient_name=patient.patient_name,
+        age=patient.age,
+        email=patient.email,
+        diagnosis=patient.diagnosis,
+        follow_up_date=patient.follow_up_date,
+        doctor_notes=patient.doctor_notes,
+        attending_doctor=patient.attending_doctor,
+        severity=patient.severity,
+        followup_status=patient.followup_status,
+        patient_summary=patient.patient_summary,
+        summary=patient.patient_summary,
+        risk_score=patient.risk_score,
+        route="",
+        reminder_text=None,
+        rag_context=None,
+        email_status=None,
+        escalation_report=None,
+        escalation_status=None,
+        error=None,
+    )
+
+
+def _run_langgraph_workflow_job(job_id: str) -> None:
+    """Run workflow using LangGraph for each patient."""
+    with SessionLocal() as session:
+        try:
+            reminder_patients, escalation_patients, skipped_patients = _classify_patients(session)
+            
+            # Process reminder patients through LangGraph
+            for patient in reminder_patients:
+                try:
+                    # Check for duplicate reminder BEFORE invoking workflow
+                    if _duplicate_reminder_today(session, patient.patient_id):
+                        logger.info(f"Skipping patient {patient.patient_id}: reminder already sent today")
+                        with WORKFLOW_JOBS_LOCK:
+                            WORKFLOW_JOBS[job_id]["results"].append(
+                                {
+                                    "patient_id": patient.patient_id,
+                                    "path": "reminder",
+                                    "status": "skipped",
+                                    "error": "Reminder already sent today.",
+                                }
+                            )
+                            WORKFLOW_JOBS[job_id]["processed"] += 1
+                        continue
+                    
+                    # Convert patient to workflow state
+                    initial_state = _patient_to_workflow_state(patient)
+                    
+                    # Invoke LangGraph workflow
+                    result_state = workflow_graph.invoke(initial_state)
+                    
+                    # Extract results from state
+                    email_status = result_state.get("email_status", "unknown")
+                    error = result_state.get("error")
+                    
+                    with WORKFLOW_JOBS_LOCK:
+                        WORKFLOW_JOBS[job_id]["results"].append(
+                            {
+                                "patient_id": patient.patient_id,
+                                "path": "reminder",
+                                "status": "success" if email_status == "sent" else "failed",
+                                "email_status": email_status,
+                                "error": error,
+                            }
+                        )
+                        WORKFLOW_JOBS[job_id]["processed"] += 1
+                    session.commit()
+                    
+                except Exception as exc:
+                    session.rollback()
+                    error_msg = _workflow_error_message(exc)
+                    logger.error(
+                        f"LangGraph workflow failed for patient {patient.patient_id}: {error_msg}",
+                        exc_info=True
+                    )
+                    with WORKFLOW_JOBS_LOCK:
+                        WORKFLOW_JOBS[job_id]["results"].append(
+                            {
+                                "patient_id": patient.patient_id,
+                                "path": "reminder",
+                                "status": "failed",
+                                "error": error_msg,
+                            }
+                        )
+                        WORKFLOW_JOBS[job_id]["processed"] += 1
+            
+            # Process escalation patients through LangGraph
+            for patient in escalation_patients:
+                try:
+                    # Convert patient to workflow state
+                    initial_state = _patient_to_workflow_state(patient)
+                    
+                    # Invoke LangGraph workflow
+                    result_state = workflow_graph.invoke(initial_state)
+                    
+                    # Extract results from state
+                    escalation_status = result_state.get("escalation_status", "unknown")
+                    error = result_state.get("error")
+                    
+                    with WORKFLOW_JOBS_LOCK:
+                        WORKFLOW_JOBS[job_id]["results"].append(
+                            {
+                                "patient_id": patient.patient_id,
+                                "path": "escalation",
+                                "status": "success" if escalation_status in ["pending", "completed"] else "failed",
+                                "escalation_status": escalation_status,
+                                "error": error,
+                            }
+                        )
+                        WORKFLOW_JOBS[job_id]["processed"] += 1
+                    session.commit()
+                    
+                except Exception as exc:
+                    session.rollback()
+                    error_msg = _workflow_error_message(exc)
+                    logger.error(
+                        f"LangGraph workflow failed for patient {patient.patient_id}: {error_msg}",
+                        exc_info=True
+                    )
+                    with WORKFLOW_JOBS_LOCK:
+                        WORKFLOW_JOBS[job_id]["results"].append(
+                            {
+                                "patient_id": patient.patient_id,
+                                "path": "escalation",
+                                "status": "failed",
+                                "error": error_msg,
+                            }
+                        )
+                        WORKFLOW_JOBS[job_id]["processed"] += 1
+            
+            with WORKFLOW_JOBS_LOCK:
+                WORKFLOW_JOBS[job_id]["status"] = "completed"
+                WORKFLOW_JOBS[job_id]["completed_at"] = now_utc()
+                
+        except Exception as exc:
+            error_msg = _workflow_error_message(exc)
+            logger.error(f"LangGraph workflow job {job_id} failed: {error_msg}", exc_info=True)
+            with WORKFLOW_JOBS_LOCK:
+                WORKFLOW_JOBS[job_id]["status"] = "failed"
+                WORKFLOW_JOBS[job_id]["error"] = error_msg
+                WORKFLOW_JOBS[job_id]["completed_at"] = now_utc()
+
+
+def start_langgraph_workflow_job(session: Session) -> dict:
+    """Start a workflow job using LangGraph instead of direct function calls."""
+    reminder_patients, escalation_patients, skipped_patients = _classify_patients(session)
+    job_id = f"graph_{uuid.uuid4().hex[:8]}"
+    total_patients = len(reminder_patients) + len(escalation_patients)
+    
+    record = {
+        "job_id": job_id,
+        "status": "running",
+        "reminder_patients": [patient.patient_id for patient in reminder_patients],
+        "escalation_patients": [patient.patient_id for patient in escalation_patients],
+        "skipped_patients": [patient.patient_id for patient in skipped_patients],
+        "results": [],
+        "processed": 0,
+        "total": total_patients,
+        "completed_at": None,
+        "error": None,
+    }
+    
+    with WORKFLOW_JOBS_LOCK:
+        WORKFLOW_JOBS[job_id] = record
+    
+    thread = threading.Thread(target=_run_langgraph_workflow_job, args=(job_id,), daemon=True)
+    thread.start()
+    return record

@@ -17,10 +17,15 @@ PROTOCOLS_DIR = DATA_DIR / "protocols"
 SYNTHETIC_DIR = DATA_DIR / "synthetic"
 CHROMA_PERSIST_DIR = BASE_DIR / "chroma_db"
 
+# ChromaDB Configuration
+CHROMA_COLLECTION_NAME = os.getenv("CHROMA_COLLECTION_NAME", "medical_protocols")
+CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "700"))
+CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "100"))
+
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 GEMINI_API_KEY = GOOGLE_API_KEY or os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "gemini-embedding-001")
 TEMPERATURE = float(os.getenv("TEMPERATURE", "0.2"))
 MAX_RETRIES = int(os.getenv("MAX_RETRIES", "3"))
 RETRY_DELAY = float(os.getenv("RETRY_DELAY", "1"))
