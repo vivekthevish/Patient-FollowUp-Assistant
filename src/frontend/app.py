@@ -1,11 +1,12 @@
+import os
 import streamlit as st
 import pandas as pd
 from datetime import datetime, date
 import requests
 import time
 
-# Configuration point for the API backend
-API_BASE_URL = "http://127.0.0.1:8000/api/v1"
+# Configuration point for the API backend — overridable via env var for Docker deployments
+# API_BASE_URL = os.environ.get("API_BASE_URL", "http://65.0.103.83:8080/api/v1")
 
 # Page configuration
 st.set_page_config(
@@ -476,6 +477,113 @@ def render_patient_intake():
         "Register incoming discharge configurations directly into the monitoring subsystem."
     )
 
+    # --- NEW: BULK EXCEL UPLOAD SECTION ---
+    with st.expander("📂 Bulk Upload Patient Details via Excel", expanded=False):
+        st.markdown(
+            "### Upload an Excel sheet (.xlsx or .xls) containing bulk patient configurations."
+        )
+        st.markdown(
+            """
+            **Required Columns:** `patient_name`, `age`, `gender`, `email`, `phone`, `diagnosis`, 
+            `follow_up_date` (YYYY-MM-DD), `doctor_notes`, `attending_doctor`, `severity` (`Critical`, `High`, `Moderate`, `Low`)
+            """
+        )
+
+        uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx", "xls"])
+
+        if uploaded_file is not None:
+            try:
+                # Read Excel into a DataFrame
+                df = pd.read_excel(uploaded_file)
+                st.dataframe(df, width=True)
+
+                if st.button(
+                    "🚀 Process and Upload Bulk Records",
+                    type="primary",
+                    key="bulk_upload_btn",
+                ):
+                    success_count = 0
+                    error_messages = []
+
+                    # Track progress visually
+                    progress_bar = st.progress(0.0)
+                    total_rows = len(df)
+
+                    for index, row in df.iterrows():
+                        # Fill missing fields gracefully
+                        payload = {
+                            "patient_name": str(row.get("patient_name", "")).strip(),
+                            "age": int(row.get("age", 45)),
+                            "gender": str(row.get("gender", "Other")).strip(),
+                            "email": str(row.get("email", "")).strip(),
+                            "phone": str(row.get("phone", ""))
+                            if pd.notna(row.get("phone"))
+                            else None,
+                            "diagnosis": str(row.get("diagnosis", "")).strip(),
+                            # Convert datetime or string timestamp safely to ISO format
+                            "follow_up_date": pd.to_datetime(
+                                row.get("follow_up_date")
+                            ).strftime("%Y-%m-%d")
+                            if pd.notna(row.get("follow_up_date"))
+                            else date(2026, 6, 20).isoformat(),
+                            "doctor_notes": str(row.get("doctor_notes", "")).strip(),
+                            "attending_doctor": str(
+                                row.get("attending_doctor", "Dr. Anjali Sharma")
+                            ).strip(),
+                            "severity": str(row.get("severity", "Moderate")).strip(),
+                        }
+
+                        # Validate mandatory fields
+                        if (
+                            not payload["patient_name"]
+                            or not payload["email"]
+                            or not payload["diagnosis"]
+                            or not payload["doctor_notes"]
+                        ):
+                            error_messages.append(
+                                f"Row {index + 2}: Missing required fields."
+                            )
+                            continue
+
+                        try:
+                            res = requests.post(
+                                f"{API_BASE_URL}/patients", json=payload
+                            )
+                            if res.status_code == 201:
+                                success_count += 1
+                            else:
+                                error_messages.append(
+                                    f"Row {index + 2} ({payload['patient_name']}): {res.json().get('detail', 'Unknown error')}"
+                                )
+                        except Exception as e:
+                            error_messages.append(
+                                f"Row {index + 2}: API Connection failure: {e}"
+                            )
+
+                        # Update progress
+                        progress_bar.progress((index + 1) / total_rows)
+
+                    # Display metrics summary
+                    if success_count > 0:
+                        st.success(
+                            f"🎉 Successfully imported {success_count} / {total_rows} patient records!"
+                        )
+                        time.sleep(1)
+                        st.rerun()
+
+                    if error_messages:
+                        with st.column_config.Expander(
+                            "⚠️ View Failed Rows / Error Logs"
+                        ):
+                            for err in error_messages:
+                                st.error(err)
+
+            except Exception as e:
+                st.error(f"Error reading the spreadsheet file: {e}")
+
+    st.markdown("---")
+
+    # --- EXISTING INDIVIDUAL REGISTRATION FORM ---
     with st.container():
         with st.form("intake_form", clear_on_submit=True):
             st.markdown(
@@ -608,31 +716,41 @@ def render_patient_management():
     if st.session_state.workflow_running and st.session_state.last_job_id:
         progress_placeholder = st.empty()
         status_placeholder = st.empty()
-        
+
         try:
             while True:
                 status_res = requests.get(
                     f"{API_BASE_URL}/workflow/status/{st.session_state.last_job_id}"
                 )
-                
+
                 if status_res.status_code == 200:
                     status_data = status_res.json()
                     processed = status_data.get("processed", 0)
                     total = status_data.get("total", st.session_state.workflow_total)
                     status = status_data.get("status", "running")
-                    
+
                     # Calculate progress percentage
                     if total > 0:
                         progress_pct = processed / total
-                        progress_placeholder.progress(progress_pct, text=f"Processing patients: {processed}/{total}")
+                        progress_placeholder.progress(
+                            progress_pct,
+                            text=f"Processing patients: {processed}/{total}",
+                        )
                     else:
-                        progress_placeholder.progress(0, text="Initializing workflow...")
-                    
+                        progress_placeholder.progress(
+                            0, text="Initializing workflow..."
+                        )
+
                     # Check if completed or failed
                     if status == "completed":
-                        progress_placeholder.progress(1.0, text=f"Completed: {processed}/{total} patients processed")
+                        progress_placeholder.progress(
+                            1.0,
+                            text=f"Completed: {processed}/{total} patients processed",
+                        )
                         st.session_state.workflow_results = status_data
-                        status_placeholder.success("✅ Workflow completed successfully! All patients processed.")
+                        status_placeholder.success(
+                            "✅ Workflow completed successfully! All patients processed."
+                        )
                         st.session_state.workflow_running = False
                         time.sleep(1)  # Brief pause to show completion
                         break
@@ -641,14 +759,14 @@ def render_patient_management():
                         status_placeholder.error(f"❌ Workflow failed: {error_msg}")
                         st.session_state.workflow_running = False
                         break
-                    
+
                     # Still running, wait before next poll
                     time.sleep(1)
                 else:
                     status_placeholder.error("Failed to fetch workflow status")
                     st.session_state.workflow_running = False
                     break
-                    
+
         except Exception as e:
             status_placeholder.error(f"Error tracking workflow: {e}")
             st.session_state.workflow_running = False
@@ -799,13 +917,15 @@ def render_escalations():
             if is_pending
             else '<span class="badge badge-green">✅ RESOLVED TRACKING</span>'
         )
-        
+
         # Calculate days pending and days overdue
         try:
-            created_date = datetime.fromisoformat(esc["created_at"].replace("Z", "+00:00"))
+            created_date = datetime.fromisoformat(
+                esc["created_at"].replace("Z", "+00:00")
+            )
             today = datetime.now()
             days_pending = (today - created_date).days
-            
+
             # Calculate days overdue from follow-up date
             followup_date = datetime.fromisoformat(esc["follow_up_date"]).date()
             today_date = date.today()
@@ -847,7 +967,13 @@ def render_escalations():
                 delta=None,
             )
         with col3:
-            urgency_label = "🔴 CRITICAL" if days_overdue > 7 else "🟡 HIGH" if days_overdue > 3 else "🟠 MODERATE"
+            urgency_label = (
+                "🔴 CRITICAL"
+                if days_overdue > 7
+                else "🟡 HIGH"
+                if days_overdue > 3
+                else "🟠 MODERATE"
+            )
             st.markdown(
                 f"<div style='text-align:center; padding:12px; background:var(--bg-tertiary); border-radius:8px; border:2px solid var(--border-color);'>"
                 f"<div style='font-size:11px; color:var(--text-tertiary); font-weight:600; margin-bottom:4px;'>URGENCY LEVEL</div>"
@@ -856,9 +982,7 @@ def render_escalations():
                 unsafe_allow_html=True,
             )
 
-        st.markdown(
-            "**🤖 AI-Generated Clinical Escalation Report:**"
-        )
+        st.markdown("**🤖 AI-Generated Clinical Escalation Report:**")
         st.markdown(
             f"<div class='escalation-alert-panel'>{esc['escalation_report']}</div>",
             unsafe_allow_html=True,

@@ -1,0 +1,36 @@
+# Version control
+.git/
+.gitignore
+
+# Python bytecode / caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Secrets — never bake into the image; inject at runtime via docker-compose env_file
+.env
+.env.*
+
+# Generated / runtime data (mounted as a volume)
+data/db/
+chroma_db/
+
+# Dev-only tooling
+tests/
+run.ps1
+Docker/
+
+# Project deliverables and docs (not needed at runtime)
+deliverables/
+Deliverables_Rough/
+docs/
+*.pdf
+*.pptx
+*.xlsx
