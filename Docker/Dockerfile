@@ -41,5 +41,5 @@ RUN mkdir -p data/db
 
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
-
+date
 EXPOSE 8000 8501

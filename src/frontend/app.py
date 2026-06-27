@@ -6,7 +6,7 @@ import requests
 import time
 
 # Configuration point for the API backend — overridable via env var for Docker deployments
-# API_BASE_URL = os.environ.get("API_BASE_URL", "http://65.0.103.83:8080/api/v1")
+API_BASE_URL = os.environ.get("API_BASE_URL", "http://127.0.0.1:8000/api/v1")
 
 # Page configuration
 st.set_page_config(
@@ -572,9 +572,7 @@ def render_patient_intake():
                         st.rerun()
 
                     if error_messages:
-                        with st.column_config.Expander(
-                            "⚠️ View Failed Rows / Error Logs"
-                        ):
+                        with st.expander("⚠️ View Failed Rows / Error Logs"):
                             for err in error_messages:
                                 st.error(err)
 
