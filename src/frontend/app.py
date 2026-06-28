@@ -495,7 +495,14 @@ def render_patient_intake():
             try:
                 # Read Excel into a DataFrame
                 df = pd.read_excel(uploaded_file)
-                st.dataframe(df, width=True)
+                df_display = df.copy()
+                if "follow_up_date" in df_display.columns:
+                    df_display["follow_up_date"] = (
+                        pd.to_datetime(df_display["follow_up_date"], errors="coerce")
+                        .dt.strftime("%Y-%m-%d")
+                        .fillna("")
+                    )
+                st.dataframe(df_display, use_container_width=True)
 
                 if st.button(
                     "🚀 Process and Upload Bulk Records",
@@ -751,6 +758,7 @@ def render_patient_management():
                         )
                         st.session_state.workflow_running = False
                         time.sleep(1)  # Brief pause to show completion
+                        st.rerun()
                         break
                     elif status == "failed":
                         error_msg = status_data.get("error", "Unknown error")

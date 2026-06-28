@@ -178,18 +178,21 @@ def build_workflow() -> Any:
     graph.add_node("reminder", _reminder_node)
     graph.add_node("escalation", _escalation_node)
 
+    graph.add_node("patient_summary_escalation", _patient_summary_node)
+
     graph.add_edge(START, "router")
     graph.add_conditional_edges(
         "router",
         route_patient,
         {
             "reminder": "patient_summary",
-            "escalation": "escalation",
+            "escalation": "patient_summary_escalation",
             "skip": END,
         },
     )
     graph.add_edge("patient_summary", "reminder")
     graph.add_edge("reminder", END)
+    graph.add_edge("patient_summary_escalation", "escalation")
     graph.add_edge("escalation", END)
 
     return graph.compile()
